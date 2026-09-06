@@ -47,6 +47,10 @@ const TRANSLATIONS = {
     'messenger.no_recipient': 'Select at least one recipient.',
     'messenger.log_title':    'Message Log',
     'messenger.show_more':    'Show More',
+    'messenger.action_rent_saved':      'Rent Payment',
+    'messenger.action_rent_reminder':   'Rent Reminder',
+    'messenger.action_increment_notice':'Rent Increment',
+    'messenger.action_custom_msg':      'Custom Message',
 
     'misc.title':             'Misc Charges',
     'misc.select_houses':     'Select House(s)',
@@ -229,6 +233,10 @@ const TRANSLATIONS = {
     'messenger.no_recipient': 'ಕನಿಷ್ಟ ಒಬ್ಬ ಸ್ವೀಕರಿಸುವವರನ್ನು ಆಯ್ಕೆ ಮಾಡಿ.',
     'messenger.log_title':    'ಸಂದೇಶ ದಾಖಲೆ',
     'messenger.show_more':    'ಇನ್ನಷ್ಟು ತೋರಿಸಿ',
+    'messenger.action_rent_saved':      'ಬಾಡಿಗೆ ಪಾವತಿ',
+    'messenger.action_rent_reminder':   'ಬಾಡಿಗೆ ನೆನಪೋಲೆ',
+    'messenger.action_increment_notice':'ಬಾಡಿಗೆ ಹೆಚ್ಚಳ ಸೂಚನೆ',
+    'messenger.action_custom_msg':      'ವಿಶೇಷ ಸಂದೇಶ',
 
     'misc.title':             'ಇತರ ಶುಲ್ಕಗಳು',
     'misc.select_houses':     'ಮನೆ(ಗಳು) ಆಯ್ಕೆ',

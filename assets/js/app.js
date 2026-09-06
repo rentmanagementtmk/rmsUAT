@@ -1388,10 +1388,18 @@ async function initMessengerPage() {
     loadLogs(true, '');
   });
 
+  const ACTION_LABEL_KEYS = {
+    RENT_SAVED:        'messenger.action_rent_saved',
+    RENT_REMINDER:     'messenger.action_rent_reminder',
+    INCREMENT_NOTICE:  'messenger.action_increment_notice',
+    CUSTOM_MSG:        'messenger.action_custom_msg',
+  };
+
   function renderLogRow(row) {
+    const actionLabel = t(ACTION_LABEL_KEYS[row.action] || row.action);
     return `<div class="msg-log-row">
       <div class="msg-log-top">
-        <span class="msg-log-action">${row.action}</span>
+        <span class="msg-log-action">${actionLabel}</span>
         <span class="msg-log-status msg-log-status--${String(row.status).toLowerCase()}">${row.status}</span>
       </div>
       <div class="msg-log-details">${row.details}</div>
