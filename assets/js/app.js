@@ -1575,15 +1575,17 @@ function initLoginPage() {
   if (savedPhone) phoneInput.value = savedPhone;
 
   sendBtn.addEventListener('click', async () => {
-    const phone = phoneInput.value.trim();
-    if (!phone) return showToast(t('auth.enter_phone'), 'warning');
+    // Strip any accidental 91/+91/spaces the user might paste, keep just the local 10-digit part
+    const localNumber = phoneInput.value.replace(/[\s\-\+]/g, '').replace(/^91/, '').replace(/^0+/, '');
+    if (!localNumber) return showToast(t('auth.enter_phone'), 'warning');
+    const phone = '91' + localNumber;
     sendBtn.disabled = true;
     sendBtn.textContent = t('auth.sending');
     try {
       const res = await apiPost({ action: 'requestLoginOtp', phone });
       if (res.error) { showToast(res.error, 'error'); return; }
       currentPhone = phone;
-      try { localStorage.setItem(LAST_PHONE_KEY, phone); } catch (_) {}
+      try { localStorage.setItem(LAST_PHONE_KEY, localNumber); } catch (_) {}
       phoneStep.classList.add('hidden');
       otpStep.classList.remove('hidden');
       if (channelNote) {

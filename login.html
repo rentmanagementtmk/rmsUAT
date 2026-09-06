@@ -37,7 +37,10 @@
     <section id="login-phone-step" class="card">
       <div class="field">
         <label for="login-phone" data-i18n="auth.phone_label">Phone Number</label>
-        <input type="tel" id="login-phone" inputmode="tel" placeholder="e.g. 9876543210">
+        <div class="phone-input-group">
+          <span class="phone-prefix">+91</span>
+          <input type="tel" id="login-phone" inputmode="numeric" pattern="[0-9]*" maxlength="10" placeholder="98765 43210">
+        </div>
       </div>
       <button id="login-send-btn" class="btn btn-primary" data-i18n="auth.send_otp">Send OTP</button>
     </section>
