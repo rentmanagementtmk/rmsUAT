@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="theme-color" content="#2563EB">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>RMS – Dashboard</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Kannada:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body data-page="dashboard">
+
+  <header class="app-header">
+    <div class="header-brand">
+      <span class="header-logo">🏠</span>
+      <span class="header-title">RMS</span>
+    </div>
+    <div class="header-actions">
+      <button id="lang-toggle" class="lang-btn" aria-label="Switch language">
+        <span class="lang-seg lang-en">E</span>
+        <span class="lang-seg lang-kn">ಕ</span>
+      </button>
+    </div>
+  </header>
+
+  <nav class="bottom-nav">
+    <a href="index.html" class="nav-item">
+      <span class="nav-icon">💳</span>
+      <span class="nav-label" data-i18n="nav.collect">Rent</span>
+    </a>
+    <a href="dashboard.html" class="nav-item nav-active">
+      <span class="nav-icon">📊</span>
+      <span class="nav-label" data-i18n="nav.dashboard">Dashboard</span>
+    </a>
+    <a href="report.html" class="nav-item">
+      <span class="nav-icon">📋</span>
+      <span class="nav-label" data-i18n="nav.summary">Summary</span>
+    </a>
+    <button type="button" id="more-btn" class="nav-item">
+      <span class="nav-icon">☰</span>
+      <span class="nav-label" data-i18n="nav.more">More</span>
+    </button>
+  </nav>
+
+  <main>
+
+    <!-- ── FILTERS ────────────────────────────────────────────── -->
+    <section class="filters card">
+      <div class="filter-title-row">
+        <h3 class="section-title" data-i18n="dashboard.filter">Filter</h3>
+        <div style="display:flex;gap:0.5rem;align-items:center">
+          <button id="validate-btn" class="validate-btn tip" data-tip="Health check">📋</button>
+          <button id="refresh-btn"  class="validate-btn tip" data-tip="Refresh">🔄</button>
+          <button id="retry-btn" class="retry-notif-btn hidden" data-i18n="dashboard.retry_btn">🔕 Retry</button>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="filter-year" data-i18n="dashboard.year_label">Year</label>
+          <select id="filter-year"></select>
+        </div>
+        <div class="field">
+          <label for="filter-month" data-i18n="dashboard.month_label">Month</label>
+          <select id="filter-month">
+            <option value="" data-i18n="dashboard.all_months">All Months</option>
+          </select>
+        </div>
+      </div>
+      <div class="field" style="margin-bottom:0">
+        <label for="filter-house" data-i18n="dashboard.house_label">House (optional)</label>
+        <select id="filter-house" data-buildings="true">
+          <option value="" data-i18n="dashboard.all_houses">All Houses</option>
+        </select>
+      </div>
+    </section>
+
+    <!-- ── PRIORITY WIDGETS ──────────────────────────────────── -->
+    <div id="priority-strip"></div>
+
+    <!-- ── RESULTS ────────────────────────────────────────────── -->
+    <div id="loading" class="loading-state hidden">
+      <div class="spinner"></div>
+      <span data-i18n="dashboard.loading">Loading…</span>
+    </div>
+
+    <div id="results"></div>
+
+  </main>
+
+  <!-- Page loader and validate/dup modal — shared with index.html logic -->
+  <div id="page-loader" class="page-loader hidden">
+    <div class="spinner"></div>
+  </div>
+
+  <div id="dup-modal" class="modal-overlay hidden">
+    <div class="modal-card">
+      <p id="dup-title"  class="modal-title"></p>
+      <div class="modal-scroll-body">
+        <p id="dup-body"   class="modal-body"></p>
+        <div id="dup-existing" class="dup-record"></div>
+        <p id="dup-question" class="modal-question"></p>
+      </div>
+      <div class="btn-group">
+        <button id="dup-cancel"  class="btn btn-secondary"></button>
+        <button id="dup-confirm" class="btn btn-primary"></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- More sheet -->
+  <div id="more-sheet" class="more-overlay hidden" role="dialog" aria-modal="true">
+    <div class="more-backdrop"></div>
+    <div class="more-panel">
+      <div class="more-panel-handle"></div>
+      <p class="more-panel-title" data-i18n="nav.more">More</p>
+      <p id="auth-info" class="more-auth-info"></p>
+      <a href="ledger.html" class="more-item">
+        <span class="more-item-icon">📒</span>
+        <span class="more-item-label" data-i18n="nav.ledger">Tenant Ledger</span>
+      </a>
+      <a href="messenger.html" class="more-item">
+        <span class="more-item-icon">💬</span>
+        <span class="more-item-label" data-i18n="nav.messenger">Messenger</span>
+      </a>
+      <a href="misc-charges.html" class="more-item">
+        <span class="more-item-icon">🧾</span>
+        <span class="more-item-label" data-i18n="nav.misc_charges">Misc Charges</span>
+      </a>
+      <button id="logout-btn" type="button" class="more-item">
+        <span class="more-item-icon">🚪</span>
+        <span class="more-item-label" data-i18n="auth.logout">Logout</span>
+      </button>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/i18n.js"></script>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>

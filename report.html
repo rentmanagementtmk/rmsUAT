@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="theme-color" content="#2563EB">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>RMS – Rent Summary</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Kannada:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body data-page="report">
+
+  <header class="app-header">
+    <div class="header-brand">
+      <span class="header-logo">🏠</span>
+      <span class="header-title">RMS</span>
+    </div>
+    <div class="header-actions">
+      <span id="report-month-badge" class="report-month-badge">
+        <button id="report-prev" class="report-nav-btn" aria-label="Previous month">&#8249;</button>
+        <span id="report-month-label"></span>
+        <button id="report-next" class="report-nav-btn" aria-label="Next month">&#8250;</button>
+      </span>
+      <button id="lang-toggle" class="lang-btn" aria-label="Switch language">
+        <span class="lang-seg lang-en">E</span>
+        <span class="lang-seg lang-kn">ಕ</span>
+      </button>
+    </div>
+  </header>
+
+  <nav class="bottom-nav">
+    <a href="index.html" class="nav-item">
+      <span class="nav-icon">💳</span>
+      <span class="nav-label" data-i18n="nav.collect">Rent</span>
+    </a>
+    <a href="dashboard.html" class="nav-item">
+      <span class="nav-icon">📊</span>
+      <span class="nav-label" data-i18n="nav.dashboard">Dashboard</span>
+    </a>
+    <a href="report.html" class="nav-item nav-active">
+      <span class="nav-icon">📋</span>
+      <span class="nav-label" data-i18n="nav.summary">Summary</span>
+    </a>
+    <button type="button" id="more-btn" class="nav-item">
+      <span class="nav-icon">☰</span>
+      <span class="nav-label" data-i18n="nav.more">More</span>
+    </button>
+  </nav>
+
+  <main>
+    <div id="page-loader" class="page-loader hidden" data-i18n="msg.loading">Loading…</div>
+    <div id="report-content"></div>
+  </main>
+
+  <!-- More sheet -->
+  <div id="more-sheet" class="more-overlay hidden" role="dialog" aria-modal="true">
+    <div class="more-backdrop"></div>
+    <div class="more-panel">
+      <div class="more-panel-handle"></div>
+      <p class="more-panel-title" data-i18n="nav.more">More</p>
+      <p id="auth-info" class="more-auth-info"></p>
+      <a href="ledger.html" class="more-item">
+        <span class="more-item-icon">📒</span>
+        <span class="more-item-label" data-i18n="nav.ledger">Tenant Ledger</span>
+      </a>
+      <a href="messenger.html" class="more-item">
+        <span class="more-item-icon">💬</span>
+        <span class="more-item-label" data-i18n="nav.messenger">Messenger</span>
+      </a>
+      <a href="misc-charges.html" class="more-item">
+        <span class="more-item-icon">🧾</span>
+        <span class="more-item-label" data-i18n="nav.misc_charges">Misc Charges</span>
+      </a>
+      <button id="logout-btn" type="button" class="more-item">
+        <span class="more-item-icon">🚪</span>
+        <span class="more-item-label" data-i18n="auth.logout">Logout</span>
+      </button>
+    </div>
+  </div>
+
+  <script src="assets/js/i18n.js"></script>
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>

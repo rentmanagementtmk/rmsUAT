@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="theme-color" content="#2563EB">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>RMS – Collect Rent</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Kannada:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body data-page="collect">
+
+  <header class="app-header">
+    <div class="header-brand">
+      <span class="header-logo">🏠</span>
+      <span class="header-title">RMS</span>
+    </div>
+    <div class="header-actions">
+      <button id="lang-toggle" class="lang-btn" aria-label="Switch language">
+        <span class="lang-seg lang-en">E</span>
+        <span class="lang-seg lang-kn">ಕ</span>
+      </button>
+    </div>
+  </header>
+
+  <nav class="bottom-nav">
+    <a href="index.html" class="nav-item nav-active">
+      <span class="nav-icon">💳</span>
+      <span class="nav-label" data-i18n="nav.collect">Rent</span>
+    </a>
+    <a href="dashboard.html" class="nav-item">
+      <span class="nav-icon">📊</span>
+      <span class="nav-label" data-i18n="nav.dashboard">Dashboard</span>
+    </a>
+    <a href="report.html" class="nav-item">
+      <span class="nav-icon">📋</span>
+      <span class="nav-label" data-i18n="nav.summary">Summary</span>
+    </a>
+    <button type="button" id="more-btn" class="nav-item">
+      <span class="nav-icon">☰</span>
+      <span class="nav-label" data-i18n="nav.more">More</span>
+    </button>
+  </nav>
+
+  <main>
+
+    <!-- ── SCAN SECTION ───────────────────────────────────────── -->
+    <section id="scan-section">
+      <div class="scan-prompt card">
+        <span class="scan-icon">📷</span>
+        <h2 data-i18n="collect.title">Rent Payment</h2>
+        <p data-i18n="collect.subtitle">Scan the house QR code to begin</p>
+        <button id="scan-btn" class="btn btn-primary" data-i18n="collect.scan_btn">Scan QR Code</button>
+        <button type="button" id="manual-toggle" class="link-btn" data-i18n="collect.manual_toggle">Enter house manually</button>
+      </div>
+
+      <div id="qr-reader-wrapper" class="card hidden">
+        <div id="qr-reader"></div>
+        <button id="stop-scan-btn" class="btn btn-secondary" style="margin-top:0.75rem" data-i18n="collect.cancel">Cancel</button>
+      </div>
+
+      <div id="manual-section" class="card hidden">
+        <h3 class="section-title" data-i18n="collect.select_house">Select House</h3>
+        <div class="field">
+          <label for="manual-house-select" data-i18n="collect.house_label">House</label>
+          <select id="manual-house-select">
+            <option value="" data-i18n="collect.house_ph">— select a house —</option>
+          </select>
+        </div>
+        <button id="use-manual-btn" class="btn btn-primary" data-i18n="collect.continue">Continue</button>
+      </div>
+    </section>
+
+    <!-- ── FORM SECTION ───────────────────────────────────────── -->
+    <section id="form-section" class="hidden">
+      <div id="house-info" class="house-card"></div>
+
+      <form id="rent-form" class="card">
+        <div class="field">
+          <label for="amount" data-i18n="collect.amount_label">Amount Received (₹)</label>
+          <input type="number" id="amount" inputmode="decimal" placeholder="e.g. 8000" min="1" required data-i18n-placeholder="collect.amount_ph">
+          <div class="amount-hint" aria-live="polite">
+            <span><span data-i18n="collect.preview_due">Current Due</span>: <strong id="preview-due">—</strong></span>
+            <span><span data-i18n="collect.preview_after">After Payment</span>: <strong id="preview-post">—</strong></span>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="rent-month" data-i18n="collect.month_label">Rent For Month</label>
+            <select id="rent-month"></select>
+          </div>
+          <div class="field">
+            <label for="rent-year" data-i18n="collect.year_label">Year</label>
+            <select id="rent-year"></select>
+          </div>
+        </div>
+        <div class="field">
+          <label data-i18n="collect.payment_mode_label">Payment Mode</label>
+          <div id="payment-mode-toggle" class="mode-toggle" role="radiogroup" aria-label="Payment Mode">
+            <button type="button" class="mode-option active" data-mode="ONLINE" data-i18n="collect.payment_mode_online" role="radio" aria-checked="true">Online</button>
+            <button type="button" class="mode-option" data-mode="CASH" data-i18n="collect.payment_mode_cash" role="radio" aria-checked="false">Cash</button>
+          </div>
+          <input type="hidden" id="payment-mode" value="ONLINE">
+        </div>
+        <div class="btn-group">
+          <button type="button" id="rescan-btn" class="btn btn-secondary" data-i18n="collect.back">← Back</button>
+          <button type="submit" id="save-btn" class="btn btn-primary" data-i18n="collect.save">Save</button>
+        </div>
+      </form>
+    </section>
+
+  </main>
+
+  <!-- Full-page spinner shown during house lookup API calls -->
+  <div id="page-loader" class="page-loader hidden">
+    <div class="spinner"></div>
+  </div>
+
+  <!-- Duplicate entry confirmation modal -->
+  <div id="dup-modal" class="modal-overlay hidden">
+    <div class="modal-card">
+      <p id="dup-title"  class="modal-title"></p>
+      <div class="modal-scroll-body">
+        <p id="dup-body"   class="modal-body"></p>
+        <div id="dup-existing" class="dup-record"></div>
+        <p id="dup-question" class="modal-question"></p>
+      </div>
+      <div class="btn-group">
+        <button id="dup-cancel"  class="btn btn-secondary"></button>
+        <button id="dup-confirm" class="btn btn-primary"></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- More sheet -->
+  <div id="more-sheet" class="more-overlay hidden" role="dialog" aria-modal="true">
+    <div class="more-backdrop"></div>
+    <div class="more-panel">
+      <div class="more-panel-handle"></div>
+      <p class="more-panel-title" data-i18n="nav.more">More</p>
+      <p id="auth-info" class="more-auth-info"></p>
+      <a href="ledger.html" class="more-item">
+        <span class="more-item-icon">📒</span>
+        <span class="more-item-label" data-i18n="nav.ledger">Tenant Ledger</span>
+      </a>
+      <a href="messenger.html" class="more-item">
+        <span class="more-item-icon">💬</span>
+        <span class="more-item-label" data-i18n="nav.messenger">Messenger</span>
+      </a>
+      <a href="misc-charges.html" class="more-item">
+        <span class="more-item-icon">🧾</span>
+        <span class="more-item-label" data-i18n="nav.misc_charges">Misc Charges</span>
+      </a>
+      <button id="logout-btn" type="button" class="more-item">
+        <span class="more-item-icon">🚪</span>
+        <span class="more-item-label" data-i18n="auth.logout">Logout</span>
+      </button>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="assets/js/i18n.js"></script>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>

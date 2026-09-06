@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RMS – QR Code Print Sheet</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #F1F5F9;
+      color: #1E293B;
+      padding: 1.5rem;
+    }
+
+    /* ── Screen-only header ───────────────────────────────── */
+    .screen-header {
+      max-width: 960px;
+      margin: 0 auto 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: white;
+      border-radius: 12px;
+      padding: 1rem 1.5rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,.08);
+    }
+    .screen-header h1  { font-size: 1.25rem; font-weight: 700; }
+    .screen-header p   { font-size: 0.875rem; color: #64748B; margin-top: 0.25rem; }
+
+    .print-btn {
+      background: #2563EB;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 0.625rem 1.5rem;
+      font-size: 0.9375rem;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .print-btn:hover { background: #1D4ED8; }
+
+    /* ── Page wrapper ─────────────────────────────────────── */
+    .page { max-width: 960px; margin: 0 auto; }
+
+    /* ── Building section ─────────────────────────────────── */
+    .building-section {
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,.08);
+      margin-bottom: 1.5rem;
+    }
+
+    .building-title {
+      background: #1E293B;
+      color: white;
+      padding: 0.625rem 1rem;
+      font-size: 0.875rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    /* ── QR grid ──────────────────────────────────────────── */
+    .qr-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 0;
+      background: #E2E8F0;
+    }
+
+    /* ── Individual QR card (label sticker) ───────────────── */
+    .qr-card {
+      background: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 1rem 0.75rem 0.875rem;
+      gap: 0.375rem;
+      text-align: center;
+    }
+
+    .qr-building {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #2563EB;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .qr-img-wrap { line-height: 0; }
+    .qr-img-wrap canvas,
+    .qr-img-wrap img { border-radius: 4px; }
+
+    .qr-floor {
+      font-size: 0.9375rem;
+      font-weight: 700;
+      color: #1E293B;
+      margin-top: 0.125rem;
+    }
+
+    .qr-id {
+      font-family: 'SF Mono', Consolas, 'Courier New', monospace;
+      font-size: 0.6875rem;
+      color: #64748B;
+      background: #F1F5F9;
+      padding: 0.125rem 0.5rem;
+      border-radius: 4px;
+      letter-spacing: 0.03em;
+    }
+
+    /* ── Print overrides ──────────────────────────────────── */
+    @media print {
+      body { background: white; padding: 0.5cm; }
+
+      .screen-header { display: none; }
+
+      .page { max-width: none; }
+
+      .building-section {
+        box-shadow: none;
+        border: 1px solid #ccc;
+        margin-bottom: 0.75rem;
+        break-inside: avoid;
+      }
+
+      .building-title {
+        background: #1E293B !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      /* 3 per row on A4 — larger QR for easier scanning */
+      .qr-grid { grid-template-columns: repeat(3, 1fr); }
+
+      /* dashed border acts as cutting guide */
+      .qr-card {
+        border: 1px dashed #aaa;
+        padding: 0.75rem 0.5rem;
+        break-inside: avoid;
+      }
+
+      /* lock QR image to exactly 5cm × 5cm on paper */
+      .qr-img-wrap canvas,
+      .qr-img-wrap img { width: 5cm !important; height: 5cm !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="screen-header">
+    <div>
+      <h1>🏠 RMS — QR Code Print Sheet</h1>
+      <p>24 houses · 5 buildings · Open in Chrome/Safari and use <strong>File → Print</strong> to generate stickers.</p>
+    </div>
+    <button class="print-btn" onclick="window.print()">🖨&nbsp; Print All</button>
+  </div>
+
+  <div class="page" id="page"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+  <script>
+    const BUILDINGS = ['Jalanidhi', 'Spatika', 'Manikya', 'Vaidurya', 'Aparanji'];
+
+    const HOUSES = [
+      { id: 'JLN-GF-01', building: 'Jalanidhi', floor: 'Ground Floor', displayNum: 1 },
+      { id: 'JLN-GF-02', building: 'Jalanidhi', floor: 'Ground Floor', displayNum: 2 },
+      { id: 'JLN-FF-01', building: 'Jalanidhi', floor: 'First Floor',  displayNum: 3 },
+      { id: 'JLN-FF-02', building: 'Jalanidhi', floor: 'First Floor',  displayNum: 4 },
+      { id: 'JLN-SF-01', building: 'Jalanidhi', floor: 'Second Floor', displayNum: 5 },
+      { id: 'JLN-SF-02', building: 'Jalanidhi', floor: 'Second Floor', displayNum: 6 },
+      { id: 'SPT-GF-01', building: 'Spatika',   floor: 'Ground Floor', displayNum: 1 },
+      { id: 'SPT-GF-02', building: 'Spatika',   floor: 'Ground Floor', displayNum: 2 },
+      { id: 'SPT-FF-01', building: 'Spatika',   floor: 'First Floor',  displayNum: 3 },
+      { id: 'SPT-FF-02', building: 'Spatika',   floor: 'First Floor',  displayNum: 4 },
+      { id: 'MNK-GF-01', building: 'Manikya',   floor: 'Ground Floor', displayNum: 1 },
+      { id: 'MNK-GF-02', building: 'Manikya',   floor: 'Ground Floor', displayNum: 2 },
+      { id: 'MNK-FF-01', building: 'Manikya',   floor: 'First Floor',  displayNum: 3 },
+      { id: 'MNK-FF-02', building: 'Manikya',   floor: 'First Floor',  displayNum: 4 },
+      { id: 'VDR-GF-01', building: 'Vaidurya',  floor: 'Ground Floor', displayNum: 1 },
+      { id: 'VDR-GF-02', building: 'Vaidurya',  floor: 'Ground Floor', displayNum: 2 },
+      { id: 'VDR-FF-01', building: 'Vaidurya',  floor: 'First Floor',  displayNum: 3 },
+      { id: 'VDR-FF-02', building: 'Vaidurya',  floor: 'First Floor',  displayNum: 4 },
+      { id: 'APR-GF-01', building: 'Aparanji',  floor: 'Ground Floor', displayNum: 1 },
+      { id: 'APR-GF-02', building: 'Aparanji',  floor: 'Ground Floor', displayNum: 2 },
+      { id: 'APR-FF-01', building: 'Aparanji',  floor: 'First Floor',  displayNum: 3 },
+      { id: 'APR-FF-02', building: 'Aparanji',  floor: 'First Floor',  displayNum: 4 },
+      { id: 'APR-SF-01', building: 'Aparanji',  floor: 'Second Floor', displayNum: 5 },
+      { id: 'APR-SF-02', building: 'Aparanji',  floor: 'Second Floor', displayNum: 6 },
+    ];
+
+    const page = document.getElementById('page');
+
+    BUILDINGS.forEach(building => {
+      const houses = HOUSES.filter(h => h.building === building);
+
+      const section = document.createElement('div');
+      section.className = 'building-section';
+      section.innerHTML = `
+        <div class="building-title">${building} &nbsp;·&nbsp; ${houses.length} Houses</div>
+        <div class="qr-grid" id="grid-${building}"></div>
+      `;
+      page.appendChild(section);
+
+      const grid = document.getElementById('grid-' + building);
+
+      houses.forEach(h => {
+        const card = document.createElement('div');
+        card.className = 'qr-card';
+        card.innerHTML = `
+          <div class="qr-building">${h.building}</div>
+          <div class="qr-img-wrap" id="qr-${h.id}"></div>
+          <div class="qr-floor">${h.building} ${h.displayNum}</div>
+          <div class="qr-id">${h.floor}</div>
+        `;
+        grid.appendChild(card);
+
+        new QRCode(document.getElementById('qr-' + h.id), {
+          text: h.id,
+          width: 200,
+          height: 200,
+          colorDark: '#1E293B',
+          colorLight: '#ffffff',
+          correctLevel: QRCode.CorrectLevel.M,
+        });
+      });
+    });
+  </script>
+
+</body>
+</html>

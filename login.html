@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="theme-color" content="#2563EB">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>RMS – Login</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Kannada:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body data-page="login">
+
+  <header class="app-header">
+    <div class="header-brand">
+      <span class="header-logo">🏠</span>
+      <span class="header-title">RMS</span>
+    </div>
+    <div class="header-actions">
+      <button id="lang-toggle" class="lang-btn" aria-label="Switch language">
+        <span class="lang-seg lang-en">E</span>
+        <span class="lang-seg lang-kn">ಕ</span>
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <section class="scan-prompt card">
+      <span class="scan-icon">🔐</span>
+      <h2 data-i18n="auth.title">Sign In</h2>
+      <p data-i18n="auth.subtitle">Enter your registered phone number to receive a login code</p>
+    </section>
+
+    <section id="login-phone-step" class="card">
+      <div class="field">
+        <label for="login-phone" data-i18n="auth.phone_label">Phone Number</label>
+        <input type="tel" id="login-phone" inputmode="tel" placeholder="e.g. 9876543210">
+      </div>
+      <button id="login-send-btn" class="btn btn-primary" data-i18n="auth.send_otp">Send OTP</button>
+    </section>
+
+    <section id="login-otp-step" class="card hidden">
+      <p id="login-channel-note" class="auth-channel-note"></p>
+      <div class="field">
+        <label for="login-otp" data-i18n="auth.otp_label">Enter OTP</label>
+        <input type="text" id="login-otp" inputmode="numeric" maxlength="6" placeholder="6-digit code">
+      </div>
+      <label class="msg-phone-row">
+        <input type="checkbox" id="login-remember">
+        <span data-i18n="auth.remember_me">Remember me on this device</span>
+      </label>
+      <div class="btn-group">
+        <button id="login-change-number" type="button" class="btn btn-secondary" data-i18n="auth.change_number">Back</button>
+        <button id="login-verify-btn" class="btn btn-primary" data-i18n="auth.verify_btn">Verify</button>
+      </div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="assets/js/i18n.js"></script>
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>

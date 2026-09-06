@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="theme-color" content="#2563EB">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>RMS – Misc Charges</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Kannada:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body data-page="misc-charges">
+
+  <header class="app-header">
+    <div class="header-brand">
+      <span class="header-logo">🏠</span>
+      <span class="header-title" data-i18n="misc.title">Misc Charges</span>
+    </div>
+    <div class="header-actions">
+      <button id="lang-toggle" class="lang-btn" aria-label="Switch language">
+        <span class="lang-seg lang-en">E</span>
+        <span class="lang-seg lang-kn">ಕ</span>
+      </button>
+    </div>
+  </header>
+
+  <nav class="bottom-nav">
+    <a href="index.html" class="nav-item">
+      <span class="nav-icon">💳</span>
+      <span class="nav-label" data-i18n="nav.collect">Rent</span>
+    </a>
+    <a href="dashboard.html" class="nav-item">
+      <span class="nav-icon">📊</span>
+      <span class="nav-label" data-i18n="nav.dashboard">Dashboard</span>
+    </a>
+    <a href="report.html" class="nav-item">
+      <span class="nav-icon">📋</span>
+      <span class="nav-label" data-i18n="nav.summary">Summary</span>
+    </a>
+    <button type="button" id="more-btn" class="nav-item">
+      <span class="nav-icon">☰</span>
+      <span class="nav-label" data-i18n="nav.more">More</span>
+    </button>
+  </nav>
+
+  <main>
+    <section class="card">
+      <div class="field">
+        <label data-i18n="misc.select_houses">Select House(s)</label>
+        <label class="msg-phone-row">
+          <input type="checkbox" id="misc-select-all-cb">
+          <span class="msg-phone-static" data-i18n="misc.select_all">Select All</span>
+        </label>
+        <div id="misc-house-list"></div>
+      </div>
+
+      <div class="field">
+        <label for="misc-description" data-i18n="misc.description_label">Description</label>
+        <input type="text" id="misc-description" data-i18n-placeholder="misc.description_ph" placeholder="e.g. Water pumpset repair">
+      </div>
+
+      <div class="field">
+        <label for="misc-amount" data-i18n="misc.amount_label">Amount (₹) — per house</label>
+        <input type="number" id="misc-amount" min="1" step="1">
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="misc-month" data-i18n="misc.month_label">For Month</label>
+          <select id="misc-month"></select>
+        </div>
+        <div class="field">
+          <label for="misc-year" data-i18n="misc.year_label">For Year</label>
+          <select id="misc-year"></select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="msg-phone-row">
+          <input type="checkbox" id="misc-notify-cb" checked>
+          <span class="msg-phone-static" data-i18n="misc.notify_label">Notify tenants via WhatsApp</span>
+        </label>
+      </div>
+
+      <div class="btn-group">
+        <button id="misc-clear-btn" type="button" class="btn btn-secondary" data-i18n="misc.clear_btn">Clear</button>
+        <button id="misc-add-btn" class="btn btn-primary" data-i18n="misc.add_btn">Add Charge</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h3 class="section-title" data-i18n="misc.log_title">Charges Log</h3>
+      <div id="misc-log-list"></div>
+      <button id="misc-show-more" class="btn btn-secondary hidden" data-i18n="misc.show_more">Show More</button>
+    </section>
+  </main>
+
+  <!-- More sheet -->
+  <div id="more-sheet" class="more-overlay hidden" role="dialog" aria-modal="true">
+    <div class="more-backdrop"></div>
+    <div class="more-panel">
+      <div class="more-panel-handle"></div>
+      <p class="more-panel-title" data-i18n="nav.more">More</p>
+      <p id="auth-info" class="more-auth-info"></p>
+      <a href="ledger.html" class="more-item">
+        <span class="more-item-icon">📒</span>
+        <span class="more-item-label" data-i18n="nav.ledger">Tenant Ledger</span>
+      </a>
+      <a href="messenger.html" class="more-item">
+        <span class="more-item-icon">💬</span>
+        <span class="more-item-label" data-i18n="nav.messenger">Messenger</span>
+      </a>
+      <a href="misc-charges.html" class="more-item">
+        <span class="more-item-icon">🧾</span>
+        <span class="more-item-label" data-i18n="nav.misc_charges">Misc Charges</span>
+      </a>
+      <button id="logout-btn" type="button" class="more-item">
+        <span class="more-item-icon">🚪</span>
+        <span class="more-item-label" data-i18n="auth.logout">Logout</span>
+      </button>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <!-- Full-page spinner shown during API calls -->
+  <div id="page-loader" class="page-loader hidden">
+    <div class="spinner"></div>
+  </div>
+
+  <script src="assets/js/i18n.js"></script>
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>
