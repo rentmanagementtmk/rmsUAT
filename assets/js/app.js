@@ -61,7 +61,8 @@ function clearAuth() {
 
 /** Redirects to login if no token is present; call at the top of every protected page init */
 function requireAuth() {
-  if (document.body.dataset.page === 'login') return true;
+  // Public, unauthenticated pages — never redirected to login
+  if (['login', 'door-ledger'].includes(document.body.dataset.page)) return true;
   if (!getAuthToken()) {
     const redirect = encodeURIComponent(location.pathname.split('/').pop() + location.search);
     location.href = `login.html?redirect=${redirect}`;
@@ -1547,6 +1548,84 @@ async function initMiscChargesPage() {
   loadLogs(true);
 }
 
+// ─── DOOR LEDGER PAGE (public, unauthenticated) ──────────────────────────────
+async function initDoorLedgerPage() {
+  applyTranslations();
+  const contentEl = document.getElementById('door-content');
+  const params = new URLSearchParams(location.search);
+  const token = params.get('t') || '';
+
+  if (!token) {
+    contentEl.innerHTML = `<p class="msg-error">${t('door.invalid_link')}</p>`;
+    return;
+  }
+
+  try {
+    const res = await apiGet({ action: 'getDoorLedger', token });
+    if (res.error) {
+      contentEl.innerHTML = `<p class="msg-error">${t('door.invalid_link')}</p>`;
+      return;
+    }
+    renderDoorLedger(res, contentEl);
+  } catch {
+    contentEl.innerHTML = `<p class="msg-error">${t('msg.net_check')}</p>`;
+  }
+}
+
+function renderDoorLedger(data, contentEl) {
+  const { house, rentPerMonth, outstanding, rows } = data;
+  const displayName = house.DisplayName || house.HouseLabel || '';
+  const since = house.OccupancyDate ? _fmtDateOnly(house.OccupancyDate) : '';
+
+  const displayRows = [...rows].reverse();
+  const rowsHtml = displayRows.map(r => {
+    const isPaid    = r.paid >= r.expected && r.expected > 0;
+    const isPartial = r.paid > 0 && r.paid < r.expected;
+    const statusCls = isPaid ? 'ledger-row--paid' : (isPartial ? 'ledger-row--partial' : (r.expected > 0 ? 'ledger-row--unpaid' : ''));
+    const paidCell  = r.payments.length
+      ? r.payments.map(p => `<span>${inr(p.amount)}</span>${p.date ? `<span class="ledger-pay-date">${_fmtDateOnly(p.date)}</span>` : ''}`).join('')
+      : `<span class="ledger-nil">—</span>`;
+    return `<tr class="${statusCls}">
+      <td class="ledger-month-cell">${t('month.' + r.month)}<br><span class="ledger-year">${r.year}</span></td>
+      <td>${r.expected > 0 ? inr(r.expected) : '<span class="ledger-nil">—</span>'}</td>
+      <td>${paidCell}</td>
+    </tr>`;
+  }).join('');
+
+  contentEl.innerHTML = `
+    <div class="ledger-header-card house-card">
+      <p class="house-building">${house.BuildingName || ''}</p>
+      <p class="house-name">${displayName}${house.TenantName ? ' · ' + house.TenantName : ''}</p>
+      ${since ? `<p class="house-rent">${t('ledger.since')} ${since}</p>` : ''}
+    </div>
+
+    <div class="ledger-totals card">
+      <div class="ledger-total-item">
+        <span>${t('door.rent_per_month')}</span>
+        <strong class="ledger-total-paid">${inr(rentPerMonth)}</strong>
+      </div>
+      <div class="ledger-total-divider"></div>
+      <div class="ledger-total-item">
+        <span>${t('ledger.outstanding')}</span>
+        <strong class="${outstanding > 0 ? 'ledger-total-owed' : 'ledger-total-clear'}">${outstanding > 0 ? inr(outstanding) : '✓ Clear'}</strong>
+      </div>
+    </div>
+
+    <div class="ledger-section">
+      <p class="ledger-section-title">${t('door.payment_history')}</p>
+      <div class="ledger-table-wrap">
+        <table class="ledger-table">
+          <thead><tr>
+            <th>${t('ledger.col_month')}</th>
+            <th>${t('ledger.col_expected')}</th>
+            <th>${t('ledger.col_paid')}</th>
+          </tr></thead>
+          <tbody>${rowsHtml}</tbody>
+        </table>
+      </div>
+    </div>`;
+}
+
 // ─── LOGIN PAGE ──────────────────────────────────────────────────────────────
 function initLoginPage() {
   applyTranslations();
@@ -1638,6 +1717,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (page === 'ledger')    initLedgerPage();
   if (page === 'messenger') initMessengerPage();
   if (page === 'misc-charges') initMiscChargesPage();
+  if (page === 'door-ledger') initDoorLedgerPage();
   if (page === 'login')     initLoginPage();
 
   // More sheet — shared across all pages

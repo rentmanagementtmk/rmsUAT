@@ -1,0 +1,14 @@
+# Environment-specific — differs intentionally between Prod/UAT repo copies, never auto-committed
+assets/js/config.js
+
+# Backend source of truth lives in the Apps Script editor, not git — avoid accidental drift/overwrite
+google-apps-script/Code.gs
+
+# Internal docs — not meant to be publicly served via GitHub Pages
+docs/
+
+# Admin-only print utility — excluded from version control
+qr-print.html
+
+# Working notes — may contain tokens/credentials, never committed
+Notes.txt

@@ -80,6 +80,11 @@ const TRANSLATIONS = {
     'ledger.total_paid':      'Total Paid',
     'ledger.outstanding':     'Outstanding',
     'ledger.payment_history': 'Payment History',
+
+    'door.title':             'Rent Ledger',
+    'door.rent_per_month':    'Rent per Month',
+    'door.payment_history':   'Payment History (Last 12 Months)',
+    'door.invalid_link':      'This link is invalid or has expired. Please contact the property manager.',
     'ledger.inc_history':     'Increment History',
     'ledger.col_month':       'Month',
     'ledger.col_expected':    'Expected',
@@ -268,6 +273,11 @@ const TRANSLATIONS = {
     'ledger.total_paid':      'ಒಟ್ಟು ಪಾವತಿ',
     'ledger.outstanding':     'ಬಾಕಿ',
     'ledger.payment_history': 'ಪಾವತಿ ವಿವರ',
+
+    'door.title':             'ಬಾಡಿಗೆ ವಿವರ',
+    'door.rent_per_month':    'ಮಾಸಿಕ ಬಾಡಿಗೆ',
+    'door.payment_history':   'ಪಾವತಿ ವಿವರ (ಕಡೆಯ 12 ತಿಂಗಳು)',
+    'door.invalid_link':      'ಈ ಲಿಂಕ್ ಅಮಾನ್ಯವಾಗಿದೆ ಅಥವಾ ಅವಧಿ ಮುಗಿದಿದೆ. ದಯವಿಟ್ಟು ಆಸ್ತಿ ಮ್ಯಾನೇಜರ್ ಅವರನ್ನು ಸಂಪರ್ಕಿಸಿ.',
     'ledger.inc_history':     'ಏರಿಕೆ ವಿವರ',
     'ledger.col_month':       'ತಿಂಗಳು',
     'ledger.col_expected':    'ಬಾಡಿಗೆ',
