@@ -48,30 +48,13 @@
 
   <main>
 
-    <!-- ── SCAN SECTION ───────────────────────────────────────── -->
+    <!-- ── HOUSE SELECT SECTION ───────────────────────────────── -->
     <section id="scan-section">
-      <div class="scan-prompt card">
-        <span class="scan-icon">📷</span>
+      <div class="card">
         <h2 data-i18n="collect.title">Rent Payment</h2>
-        <p data-i18n="collect.subtitle">Scan the house QR code to begin</p>
-        <button id="scan-btn" class="btn btn-primary" data-i18n="collect.scan_btn">Scan QR Code</button>
-        <button type="button" id="manual-toggle" class="link-btn" data-i18n="collect.manual_toggle">Enter house manually</button>
-      </div>
-
-      <div id="qr-reader-wrapper" class="card hidden">
-        <div id="qr-reader"></div>
-        <button id="stop-scan-btn" class="btn btn-secondary" style="margin-top:0.75rem" data-i18n="collect.cancel">Cancel</button>
-      </div>
-
-      <div id="manual-section" class="card hidden">
-        <h3 class="section-title" data-i18n="collect.select_house">Select House</h3>
-        <div class="field">
-          <label for="manual-house-select" data-i18n="collect.house_label">House</label>
-          <select id="manual-house-select">
-            <option value="" data-i18n="collect.house_ph">— select a house —</option>
-          </select>
-        </div>
-        <button id="use-manual-btn" class="btn btn-primary" data-i18n="collect.continue">Continue</button>
+        <p data-i18n="collect.subtitle">Select the house to begin</p>
+        <div id="collect-building-tabs" class="building-tabs"></div>
+        <div id="collect-house-grid" class="house-grid"></div>
       </div>
     </section>
 
@@ -165,7 +148,6 @@
   <div id="toast" class="toast hidden"></div>
 
   <script src="assets/js/i18n.js"></script>
-  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <script src="assets/js/config.js"></script>
   <script src="assets/js/app.js"></script>
 </body>

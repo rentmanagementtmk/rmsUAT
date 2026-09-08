@@ -379,7 +379,14 @@ function _refreshHouseSelects() {
       if (typeof renderFn === 'function') renderFn(_dashboardRecords, _dashboardBalances);
     }
   }
+  // Re-render Misc Charges house checklist, if that page registered a refresh hook
+  if (typeof _refreshMiscHouseList === 'function') _refreshMiscHouseList();
+  // Re-render Collect page's house grid, if that page registered a refresh hook
+  if (typeof _refreshCollectHouseGrid === 'function') _refreshCollectHouseGrid();
 }
+
+let _refreshMiscHouseList = null;
+let _refreshCollectHouseGrid = null;
 
 function populateHouseSelect(el) {
   _houseSelectEls.add(el);
@@ -398,17 +405,10 @@ async function initCollectPage() {
   monthSel.value = month;
   yearSel.value  = year;
 
-  const manualSel = document.getElementById('manual-house-select');
-  populateHouseSelect(manualSel);
-
   const scanSection  = document.getElementById('scan-section');
   const formSection  = document.getElementById('form-section');
-  const qrWrapper    = document.getElementById('qr-reader-wrapper');
-  const scanBtn      = document.getElementById('scan-btn');
-  const stopScanBtn  = document.getElementById('stop-scan-btn');
-  const manualToggle = document.getElementById('manual-toggle');
-  const manualSection = document.getElementById('manual-section');
-  const useManualBtn = document.getElementById('use-manual-btn');
+  const buildingTabsEl = document.getElementById('collect-building-tabs');
+  const houseGridEl  = document.getElementById('collect-house-grid');
   const rescanBtn    = document.getElementById('rescan-btn');
   const rentForm     = document.getElementById('rent-form');
   const houseInfoEl  = document.getElementById('house-info');
@@ -422,9 +422,41 @@ async function initCollectPage() {
   const previewPost     = document.getElementById('preview-post');
 
   let currentHouse = null;
-  let scanner      = null;
   let _previewBase = null;
   let _previewTimer = null;
+  let _activeBuilding = BUILDINGS[0];
+
+  function renderBuildingTabs() {
+    buildingTabsEl.innerHTML = BUILDINGS.map(b =>
+      `<button type="button" class="building-tab${b === _activeBuilding ? ' active' : ''}" data-building="${b}">${b}</button>`
+    ).join('');
+    buildingTabsEl.querySelectorAll('.building-tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        _activeBuilding = btn.dataset.building;
+        renderBuildingTabs();
+        renderHouseGrid();
+      });
+    });
+  }
+
+  function renderHouseGrid() {
+    houseGridEl.innerHTML = HOUSES.filter(h => h.building === _activeBuilding).map(h => {
+      const cached = HOUSE_CACHE[h.id];
+      const active = cached ? (cached.IsActive === true || String(cached.IsActive).toUpperCase() === 'TRUE') : true;
+      const tenant = cached?.TenantName || '';
+      return `<button type="button" class="house-grid-btn${active ? '' : ' house-grid-btn--vacant'}" data-house="${h.id}" ${active ? '' : 'disabled'}>
+        <span class="house-grid-num">${h.displayNum}</span>
+        <span class="house-grid-tenant">${active ? (tenant || '—') : t('misc.vacant_label')}</span>
+      </button>`;
+    }).join('');
+    houseGridEl.querySelectorAll('.house-grid-btn:not(:disabled)').forEach(btn => {
+      btn.addEventListener('click', () => selectHouse(btn.dataset.house));
+    });
+  }
+
+  renderBuildingTabs();
+  renderHouseGrid();
+  _refreshCollectHouseGrid = renderHouseGrid;
 
   function setPaymentMode(mode) {
     const normalized = String(mode || 'ONLINE').toUpperCase() === 'CASH' ? 'CASH' : 'ONLINE';
@@ -490,15 +522,6 @@ async function initCollectPage() {
     _previewTimer = setTimeout(refreshPreview, 220);
   }
 
-  async function stopScanner() {
-    if (scanner) {
-      try { await scanner.stop(); } catch (_) {}
-      scanner = null;
-    }
-    qrWrapper.classList.add('hidden');
-    scanBtn.classList.remove('hidden');
-  }
-
   // preview is included in the same response as house to avoid a second round-trip
   function showForm(house, preview) {
     currentHouse = house;
@@ -532,55 +555,8 @@ async function initCollectPage() {
     yearSel.value  = p.year;
   }
 
-  scanBtn.addEventListener('click', () => {
-    scanBtn.classList.add('hidden');
-    qrWrapper.classList.remove('hidden');
-
-    scanner = new Html5Qrcode('qr-reader');
-    scanner.start(
-      { facingMode: 'environment' },
-      {
-        fps: 10,
-        qrbox: (w, h) => {
-          const side = Math.floor(Math.min(w, h) * 0.7);
-          return { width: side, height: side };
-        },
-      },
-      async (qrValue) => {
-        await stopScanner();
-        showLoader();
-        try {
-          const { month, year } = prevMonth();
-          const res = await apiGet({ action: 'getHouseWithPreview', qr: qrValue,
-            year: parseInt(yearSel.value, 10) || year,
-            month: parseInt(monthSel.value, 10) || month });
-          hideLoader();
-          if (res.error === 'VACANT') return showToast(t('msg.house_vacant'), 'warning');
-          if (res.error) return showToast(t('msg.house_not_found'), 'error');
-          showForm(res.house, res.preview);
-        } catch {
-          hideLoader();
-          showToast(t('msg.network_error'), 'error');
-        }
-      },
-      () => {} // per-frame decode errors are expected and ignored
-    ).catch(() => {
-      showToast(t('msg.camera_denied'), 'warning');
-      stopScanner();
-    });
-  });
-
-  stopScanBtn.addEventListener('click', stopScanner);
-
-  manualToggle.addEventListener('click', () => {
-    manualSection.classList.toggle('hidden');
-    manualSel.value = '';
-  });
-
-  useManualBtn.addEventListener('click', async () => {
-    const houseId = manualSel.value;
-    if (!houseId) return showToast(t('msg.select_house'), 'warning');
-    useManualBtn.disabled = true;
+  async function selectHouse(houseId) {
+    if (!houseId) return;
     showLoader();
     try {
       const { month, year } = prevMonth();
@@ -589,15 +565,13 @@ async function initCollectPage() {
         month: parseInt(monthSel.value, 10) || month });
       if (res.error === 'VACANT') { showToast(t('msg.house_vacant'), 'warning'); return; }
       if (res.error) { showToast(t('msg.house_not_found'), 'error'); return; }
-      manualSection.classList.add('hidden');
       showForm(res.house, res.preview);
     } catch {
       showToast(t('msg.network_error'), 'error');
     } finally {
       hideLoader();
-      useManualBtn.disabled = false;
     }
-  });
+  }
 
   rescanBtn.addEventListener('click', resetToScan);
   amountEl.addEventListener('input', updatePostPayment);
@@ -1393,6 +1367,7 @@ async function initMessengerPage() {
     RENT_REMINDER:     'messenger.action_rent_reminder',
     INCREMENT_NOTICE:  'messenger.action_increment_notice',
     CUSTOM_MSG:        'messenger.action_custom_msg',
+    MISC_CHARGE:       'messenger.action_misc_charge',
   };
 
   function renderLogRow(row) {
@@ -1454,29 +1429,40 @@ async function initMiscChargesPage() {
   monthSel.value = month;
   yearSel.value  = year;
 
-  // Render one checkbox per active house, grouped by building
-  BUILDINGS.forEach(building => {
-    const group = document.createElement('div');
-    group.className = 'msg-phones-wrap';
-    const groupLabel = document.createElement('label');
-    groupLabel.textContent = building;
-    group.appendChild(groupLabel);
-    HOUSES.filter(h => h.building === building).forEach(h => {
-      const row = document.createElement('label');
-      row.className = 'msg-phone-row';
-      row.innerHTML = `<input type="checkbox" class="misc-house-cb" value="${h.id}">
-        <span class="msg-phone-static">${houseLabel(h)}</span>`;
-      group.appendChild(row);
+  // Render one checkbox per house, grouped by building; vacant houses are disabled (can't be charged)
+  function renderMiscHouseList() {
+    const checkedIds = new Set(
+      Array.from(houseListEl.querySelectorAll('.misc-house-cb:checked')).map(cb => cb.value)
+    );
+    houseListEl.innerHTML = '';
+    BUILDINGS.forEach(building => {
+      const group = document.createElement('div');
+      group.className = 'msg-phones-wrap';
+      const groupLabel = document.createElement('label');
+      groupLabel.textContent = building;
+      group.appendChild(groupLabel);
+      HOUSES.filter(h => h.building === building).forEach(h => {
+        const cached = HOUSE_CACHE[h.id];
+        const active = cached ? (cached.IsActive === true || String(cached.IsActive).toUpperCase() === 'TRUE') : true;
+        const row = document.createElement('label');
+        row.className = 'msg-phone-row' + (active ? '' : ' msg-phone-row--empty');
+        row.innerHTML = `<input type="checkbox" class="misc-house-cb" value="${h.id}" ${active ? '' : 'disabled'} ${checkedIds.has(h.id) ? 'checked' : ''}>
+          <span class="msg-phone-static">${houseLabel(h)}${active ? '' : ` \u2014 ${t('misc.vacant_label')}`}</span>`;
+        group.appendChild(row);
+      });
+      houseListEl.appendChild(group);
     });
-    houseListEl.appendChild(group);
-  });
+  }
+
+  renderMiscHouseList();
+  _refreshMiscHouseList = renderMiscHouseList;
 
   function getSelectedHouseIds() {
     return Array.from(houseListEl.querySelectorAll('.misc-house-cb:checked')).map(cb => cb.value);
   }
 
   selectAllCb.addEventListener('change', () => {
-    houseListEl.querySelectorAll('.misc-house-cb').forEach(cb => { cb.checked = selectAllCb.checked; });
+    houseListEl.querySelectorAll('.misc-house-cb:not(:disabled)').forEach(cb => { cb.checked = selectAllCb.checked; });
   });
 
   function resetForm() {

@@ -51,6 +51,7 @@ const TRANSLATIONS = {
     'messenger.action_rent_reminder':   'Rent Reminder',
     'messenger.action_increment_notice':'Rent Increment',
     'messenger.action_custom_msg':      'Custom Message',
+    'messenger.action_misc_charge':     'Misc Charge',
 
     'misc.title':             'Misc Charges',
     'misc.select_houses':     'Select House(s)',
@@ -70,6 +71,7 @@ const TRANSLATIONS = {
     'misc.no_description':    'Enter a description.',
     'misc.invalid_amount':    'Enter a valid amount.',
     'misc.added_success':     'Charge added!',
+    'misc.vacant_label':      'Vacant',
 
     'ledger.title':           'Tenant Ledger',
     'ledger.select_house':    'Select House',
@@ -85,7 +87,7 @@ const TRANSLATIONS = {
     'ledger.col_balance':     'Balance',
 
     'collect.title':          'Rent Payment',
-    'collect.subtitle':       'Scan the house QR code to begin',
+    'collect.subtitle':       'Select the house to begin',
     'collect.scan_btn':       'Scan QR Code',
     'collect.manual_toggle':  'Enter house manually',
     'collect.cancel':         'Cancel',
@@ -237,6 +239,7 @@ const TRANSLATIONS = {
     'messenger.action_rent_reminder':   'ಬಾಡಿಗೆ ನೆನಪೋಲೆ',
     'messenger.action_increment_notice':'ಬಾಡಿಗೆ ಹೆಚ್ಚಳ ಸೂಚನೆ',
     'messenger.action_custom_msg':      'ವಿಶೇಷ ಸಂದೇಶ',
+    'messenger.action_misc_charge':     'ಇತರ ಶುಲ್ಕ',
 
     'misc.title':             'ಇತರ ಶುಲ್ಕಗಳು',
     'misc.select_houses':     'ಮನೆ(ಗಳು) ಆಯ್ಕೆ',
@@ -256,6 +259,7 @@ const TRANSLATIONS = {
     'misc.no_description':    'ವಿವರಣೆ ನಮೂದಿಸಿ.',
     'misc.invalid_amount':    'ಮಾನ್ಯ ಮೊತ್ತ ನಮೂದಿಸಿ.',
     'misc.added_success':     'ಶುಲ್ಕ ಸೇರಿಸಲಾಗಿದೆ!',
+    'misc.vacant_label':      'ಖಾಲಿ',
 
     'ledger.title':           'ಬಾಡಿಗೆದಾರರ ವಿವರ',
     'ledger.select_house':    'ಮನೆ ಆಯ್ಕೆ',
@@ -270,7 +274,7 @@ const TRANSLATIONS = {
     'ledger.col_paid':        'ಪಾವತಿ',
     'ledger.col_balance':     'ಬಾಕಿ',
     'collect.title':          'ಬಾಡಿಗೆ ಪಾವತಿ',
-    'collect.subtitle':       'ಮನೆಯ QR ಕೋಡ್ ಸ್ಕ್ಯಾನ್ ಮಾಡಿ',
+    'collect.subtitle':       'ಪ್ರಾರಂಭಿಸಲು ಮನೆ ಆಯ್ಕೆಮಾಡಿ',
     'collect.scan_btn':       'QR ಕೋಡ್ ಸ್ಕ್ಯಾನ್ ಮಾಡಿ',
     'collect.manual_toggle':  'ಹಸ್ತಚಾಲಿತವಾಗಿ ಮನೆ ಆಯ್ಕೆ ಮಾಡಿ',
     'collect.cancel':         'ರದ್ದುಮಾಡಿ',
