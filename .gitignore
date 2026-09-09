@@ -4,11 +4,9 @@ assets/js/config.js
 # Backend source of truth lives in the Apps Script editor, not git — avoid accidental drift/overwrite
 google-apps-script/Code.gs
 
-# Internal docs — not meant to be publicly served via GitHub Pages
+# Internal docs — not meant to be publicly served via GitHub Pages (also covers docs/qr-print.html,
+# the fully-open offline QR print tool)
 docs/
-
-# Admin-only print utility — excluded from version control
-qr-print.html
 
 # Working notes — may contain tokens/credentials, never committed
 Notes.txt
