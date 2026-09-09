@@ -1722,6 +1722,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (page === 'messenger') initMessengerPage();
   if (page === 'misc-charges') initMiscChargesPage();
   if (page === 'door-ledger') initDoorLedgerPage();
+  if (page === 'qr-print' && typeof initQrPrintPage === 'function') initQrPrintPage();
   if (page === 'login')     initLoginPage();
 
   // More sheet — shared across all pages

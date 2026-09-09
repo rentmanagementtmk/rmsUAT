@@ -14,6 +14,7 @@ const TRANSLATIONS = {
     'nav.ledger':             'Tenant Ledger',
     'nav.messenger':          'Messenger',
     'nav.misc_charges':       'Misc Charges',
+    'nav.qr_print':           'Print QR Codes',
     'nav.coming_soon':        'Soon',
 
     'auth.title':             'Sign In',
@@ -207,6 +208,7 @@ const TRANSLATIONS = {
     'nav.ledger':             'ಬಾಡಿಗೆ ವಿವರ',
     'nav.messenger':          'ಸಂದೇಶ',
     'nav.misc_charges':       'ಇತರ ಶುಲ್ಕಗಳು',
+    'nav.qr_print':           'QR ಕೋಡ್ ಮುದ್ರಿಸಿ',
     'nav.coming_soon':        'ಬರಲಿದೆ',
 
     'auth.title':             'ಸೈನ್ ಇನ್',
