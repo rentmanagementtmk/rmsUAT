@@ -122,8 +122,8 @@ function prevMonth() {
   return m === 1 ? { month: 12, year: y - 1 } : { month: m - 1, year: y };
 }
 
-function showLoader() { document.getElementById('page-loader').classList.remove('hidden'); }
-function hideLoader() { document.getElementById('page-loader').classList.add('hidden'); }
+function showLoader() { document.getElementById('page-loader')?.classList.remove('hidden'); }
+function hideLoader() { document.getElementById('page-loader')?.classList.add('hidden'); }
 
 function showValidateResult(res) {
   const renderItem = item => {
@@ -1654,6 +1654,7 @@ function initLoginPage() {
     const phone = '91' + localNumber;
     sendBtn.disabled = true;
     sendBtn.textContent = t('auth.sending');
+    showLoader();
     try {
       const res = await apiPost({ action: 'requestLoginOtp', phone });
       if (res.error) { showToast(res.error, 'error'); return; }
@@ -1668,6 +1669,7 @@ function initLoginPage() {
     } catch {
       showToast(t('msg.network_error'), 'error');
     } finally {
+      hideLoader();
       sendBtn.disabled = false;
       sendBtn.textContent = t('auth.send_otp');
     }
@@ -1678,6 +1680,7 @@ function initLoginPage() {
     if (!code) return showToast(t('auth.enter_otp'), 'warning');
     verifyBtn.disabled = true;
     verifyBtn.textContent = t('auth.verifying');
+    showLoader();
     try {
       const res = await apiPost({
         action: 'verifyLoginOtp',
@@ -1693,6 +1696,7 @@ function initLoginPage() {
     } catch {
       showToast(t('msg.network_error'), 'error');
     } finally {
+      hideLoader();
       verifyBtn.disabled = false;
       verifyBtn.textContent = t('auth.verify_btn');
     }
@@ -1736,6 +1740,8 @@ document.addEventListener('DOMContentLoaded', () => {
   if (authInfoEl && info) authInfoEl.textContent = `${info.name || ''} (${info.role || ''})`;
   if (logoutBtn) {
     logoutBtn.addEventListener('click', async () => {
+      logoutBtn.disabled = true;
+      showLoader();
       try { await apiPost({ action: 'logout' }); } catch (_) {}
       clearAuth();
       location.href = 'login.html';
