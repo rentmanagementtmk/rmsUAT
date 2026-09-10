@@ -109,6 +109,25 @@
     </div>
   </header>
 
+  <nav class="bottom-nav">
+    <a href="index.html" class="nav-item">
+      <span class="nav-icon">💳</span>
+      <span class="nav-label" data-i18n="nav.collect">Rent</span>
+    </a>
+    <a href="dashboard.html" class="nav-item">
+      <span class="nav-icon">📊</span>
+      <span class="nav-label" data-i18n="nav.dashboard">Dashboard</span>
+    </a>
+    <a href="report.html" class="nav-item">
+      <span class="nav-icon">📋</span>
+      <span class="nav-label" data-i18n="nav.summary">Summary</span>
+    </a>
+    <button type="button" id="more-btn" class="nav-item">
+      <span class="nav-icon">☰</span>
+      <span class="nav-label" data-i18n="nav.more">More</span>
+    </button>
+  </nav>
+
   <div class="qrp-screen-header">
     <div>
       <h1>🏠 Door Ledger QR Print Sheet</h1>
@@ -119,6 +138,32 @@
 
   <div class="qrp-page" id="qrp-page"></div>
 
+  <!-- More sheet -->
+  <div id="more-sheet" class="more-overlay hidden" role="dialog" aria-modal="true">
+    <div class="more-backdrop"></div>
+    <div class="more-panel">
+      <div class="more-panel-handle"></div>
+      <p class="more-panel-title" data-i18n="nav.more">More</p>
+      <p id="auth-info" class="more-auth-info"></p>
+      <a href="ledger.html" class="more-item">
+        <span class="more-item-icon">📒</span>
+        <span class="more-item-label" data-i18n="nav.ledger">Tenant Ledger</span>
+      </a>
+      <a href="messenger.html" class="more-item">
+        <span class="more-item-icon">💬</span>
+        <span class="more-item-label" data-i18n="nav.messenger">Messenger</span>
+      </a>
+      <a href="misc-charges.html" class="more-item">
+        <span class="more-item-icon">🧾</span>
+        <span class="more-item-label" data-i18n="nav.misc_charges">Misc Charges</span>
+      </a>
+      <button id="logout-btn" type="button" class="more-item">
+        <span class="more-item-icon">🚪</span>
+        <span class="more-item-label" data-i18n="auth.logout">Logout</span>
+      </button>
+    </div>
+  </div>
+
   <div id="toast" class="toast hidden"></div>
   <div id="page-loader" class="page-loader hidden">
     <div class="spinner"></div>
@@ -126,6 +171,7 @@
 
   <script src="assets/js/i18n.js"></script>
   <script src="assets/js/config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
   <script src="assets/js/app.js"></script>
   <script>
     const BUILDINGS = ['Jalanidhi', 'Spatika', 'Manikya', 'Vaidurya', 'Aparanji'];
@@ -172,6 +218,8 @@
       }
 
       page.innerHTML = '';
+      let okCount = 0, failCount = 0;
+      const total = HOUSES.length;
 
       BUILDINGS.forEach(building => {
         const houses = HOUSES.filter(h => h.building === building);
@@ -197,24 +245,63 @@
           `;
           grid.appendChild(card);
 
-          const publicToken = tokenByHouse[h.id];
-          // Relative to THIS page's own deployed URL — automatically correct on Prod and UAT alike,
-          // no manually-set config value needed (unlike the earlier offline-tool version)
-          const doorLedgerUrl = publicToken
-            ? new URL('door-ledger.html?t=' + encodeURIComponent(publicToken), location.href).href
-            : h.id; // fallback — shouldn't happen once getHouses has self-healed all tokens
+          try {
+            const publicToken = tokenByHouse[h.id];
+            // Relative to THIS page's own deployed URL — automatically correct on Prod and UAT alike,
+            // no manually-set config value needed (unlike the earlier offline-tool version)
+            const doorLedgerUrl = publicToken
+              ? new URL('door-ledger.html?t=' + encodeURIComponent(publicToken), location.href).href
+              : h.id; // fallback — shouldn't happen once getHouses has self-healed all tokens
 
-          const qrImg = document.createElement('img');
-          qrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' + encodeURIComponent(doorLedgerUrl);
-          qrImg.width = 200;
-          qrImg.height = 200;
-          qrImg.alt = h.id;
-          qrImg.onerror = () => {
-            document.getElementById('qrp-img-' + h.id).innerHTML = '<p style="color:#DC2626;font-size:0.7rem;">QR image failed to load</p>';
-          };
-          document.getElementById('qrp-img-' + h.id).appendChild(qrImg);
+            const wrap = document.getElementById('qrp-img-' + h.id);
+
+            if (typeof QRCode !== 'undefined') {
+              // Primary path: client-side canvas library — no third-party network dependency once loaded
+              new QRCode(wrap, {
+                text: doorLedgerUrl, width: 200, height: 200,
+                colorDark: '#1E293B', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M,
+              });
+              okCount++;
+            } else {
+              // Fallback path: image-generation API, only used if the canvas library failed to load
+              const qrImg = document.createElement('img');
+              qrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' + encodeURIComponent(doorLedgerUrl);
+              qrImg.width = 200;
+              qrImg.height = 200;
+              qrImg.alt = h.id;
+              qrImg.onerror = () => {
+                failCount++;
+                wrap.innerHTML = '<p style="color:#DC2626;font-size:0.7rem;">QR failed to load</p>';
+                updateStatusBanner();
+              };
+              qrImg.onload = () => { okCount++; updateStatusBanner(); };
+              wrap.appendChild(qrImg);
+            }
+          } catch (err) {
+            failCount++;
+            document.getElementById('qrp-img-' + h.id).innerHTML = '<p style="color:#DC2626;font-size:0.7rem;">' + err.message + '</p>';
+          }
         });
       });
+
+      updateStatusBanner();
+
+      function updateStatusBanner() {
+        let banner = document.getElementById('qrp-status-banner');
+        if (!banner) {
+          banner = document.createElement('p');
+          banner.id = 'qrp-status-banner';
+          banner.style.cssText = 'max-width:960px;margin:0 auto 1rem;padding:0.625rem 1rem;border-radius:8px;font-size:0.8125rem;';
+          page.parentNode.insertBefore(banner, page);
+        }
+        if (failCount === 0) {
+          banner.style.cssText += 'background:#DCFCE7;color:#166534;';
+          banner.textContent = `✅ All ${total} QR codes rendered successfully.`;
+        } else {
+          banner.style.cssText += 'background:#FEE2E2;color:#991B1B;';
+          banner.textContent = `⚠️ ${failCount} of ${total} QR codes failed to render — check your internet connection and refresh.`;
+        }
+      }
     }
   </script>
 </body>

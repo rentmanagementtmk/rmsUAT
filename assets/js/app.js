@@ -576,6 +576,9 @@ async function initCollectPage() {
 
   rescanBtn.addEventListener('click', resetToScan);
   amountEl.addEventListener('input', updatePostPayment);
+  // Localized "Please fill out this field" message (browser default ignores the page's language)
+  amountEl.addEventListener('invalid', () => amountEl.setCustomValidity(t('msg.fill_field')));
+  amountEl.addEventListener('input', () => amountEl.setCustomValidity(''));
   monthSel.addEventListener('change', schedulePreviewRefresh);
   yearSel.addEventListener('change', schedulePreviewRefresh);
   if (paymentModeToggleEl) {
