@@ -1579,6 +1579,7 @@ async function initDoorLedgerPage() {
 
   try {
     // param name 't' (not 'token') — apiGet() always overwrites 'token' with the session auth token
+    showLoader();
     const res = await apiGet({ action: 'getDoorLedger', t: token });
     if (res.error) {
       contentEl.innerHTML = `<p class="msg-error">${t('door.invalid_link')}</p>`;
@@ -1587,6 +1588,8 @@ async function initDoorLedgerPage() {
     renderDoorLedger(res, contentEl);
   } catch {
     contentEl.innerHTML = `<p class="msg-error">${t('msg.net_check')}</p>`;
+  } finally {
+    hideLoader();
   }
 }
 
