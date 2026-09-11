@@ -1159,6 +1159,11 @@ async function initLedgerPage() {
   const selectorEl = document.getElementById('ledger-selector');
   const loadingEl  = document.getElementById('ledger-loading');
   const contentEl  = document.getElementById('ledger-content');
+  const backBtn    = document.getElementById('ledger-back-btn');
+  // Only true when the page was opened without a house (e.g. via More sheet) and the user
+  // then picked one from the on-page selector — in that case "back" should return to the
+  // selector, not exit the page, since there's no meaningful prior page in history for it
+  const arrivedViaSelector = !houseId;
 
   async function loadLedger(id) {
     selectorEl.classList.add('hidden');
@@ -1185,6 +1190,15 @@ async function initLedgerPage() {
       if (!sel.value) return showToast(t('msg.select_house'), 'warning');
       history.replaceState(null, '', `ledger.html?house=${encodeURIComponent(sel.value)}`);
       loadLedger(sel.value);
+    });
+  }
+
+  if (backBtn && arrivedViaSelector) {
+    backBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      history.replaceState(null, '', 'ledger.html');
+      contentEl.innerHTML = '';
+      selectorEl.classList.remove('hidden');
     });
   }
 }
@@ -1589,8 +1603,11 @@ function renderDoorLedger(data, contentEl) {
     const paidCell  = r.payments.length
       ? r.payments.map(p => `<span>${inr(p.amount)}</span>${p.date ? `<span class="ledger-pay-date">${_fmtDateOnly(p.date)}</span>` : ''}`).join('')
       : `<span class="ledger-nil">—</span>`;
+    const chargesLine = (r.charges && r.charges.length)
+      ? `<span class="ledger-charges">${r.charges.map(c => `+ ${inr(c.amount)} · ${c.description}`).join('<br>')}</span>`
+      : '';
     return `<tr class="${statusCls}">
-      <td class="ledger-month-cell">${t('month.' + r.month)}<br><span class="ledger-year">${r.year}</span></td>
+      <td class="ledger-month-cell">${t('month.' + r.month)}<br><span class="ledger-year">${r.year}</span>${chargesLine}</td>
       <td>${r.expected > 0 ? inr(r.expected) : '<span class="ledger-nil">—</span>'}</td>
       <td>${paidCell}</td>
     </tr>`;
