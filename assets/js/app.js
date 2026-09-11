@@ -1564,7 +1564,8 @@ async function initDoorLedgerPage() {
   }
 
   try {
-    const res = await apiGet({ action: 'getDoorLedger', token });
+    // param name 't' (not 'token') — apiGet() always overwrites 'token' with the session auth token
+    const res = await apiGet({ action: 'getDoorLedger', t: token });
     if (res.error) {
       contentEl.innerHTML = `<p class="msg-error">${t('door.invalid_link')}</p>`;
       return;
