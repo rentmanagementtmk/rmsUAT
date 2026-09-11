@@ -174,34 +174,7 @@
   <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
   <script src="assets/js/app.js"></script>
   <script>
-    const BUILDINGS = ['Jalanidhi', 'Spatika', 'Manikya', 'Vaidurya', 'Aparanji'];
-
-    const HOUSES = [
-      { id: 'JLN-GF-01', building: 'Jalanidhi', floor: 'Ground Floor', displayNum: 1 },
-      { id: 'JLN-GF-02', building: 'Jalanidhi', floor: 'Ground Floor', displayNum: 2 },
-      { id: 'JLN-FF-01', building: 'Jalanidhi', floor: 'First Floor',  displayNum: 3 },
-      { id: 'JLN-FF-02', building: 'Jalanidhi', floor: 'First Floor',  displayNum: 4 },
-      { id: 'JLN-SF-01', building: 'Jalanidhi', floor: 'Second Floor', displayNum: 5 },
-      { id: 'JLN-SF-02', building: 'Jalanidhi', floor: 'Second Floor', displayNum: 6 },
-      { id: 'SPT-GF-01', building: 'Spatika',   floor: 'Ground Floor', displayNum: 1 },
-      { id: 'SPT-GF-02', building: 'Spatika',   floor: 'Ground Floor', displayNum: 2 },
-      { id: 'SPT-FF-01', building: 'Spatika',   floor: 'First Floor',  displayNum: 3 },
-      { id: 'SPT-FF-02', building: 'Spatika',   floor: 'First Floor',  displayNum: 4 },
-      { id: 'MNK-GF-01', building: 'Manikya',   floor: 'Ground Floor', displayNum: 1 },
-      { id: 'MNK-GF-02', building: 'Manikya',   floor: 'Ground Floor', displayNum: 2 },
-      { id: 'MNK-FF-01', building: 'Manikya',   floor: 'First Floor',  displayNum: 3 },
-      { id: 'MNK-FF-02', building: 'Manikya',   floor: 'First Floor',  displayNum: 4 },
-      { id: 'VDR-GF-01', building: 'Vaidurya',  floor: 'Ground Floor', displayNum: 1 },
-      { id: 'VDR-GF-02', building: 'Vaidurya',  floor: 'Ground Floor', displayNum: 2 },
-      { id: 'VDR-FF-01', building: 'Vaidurya',  floor: 'First Floor',  displayNum: 3 },
-      { id: 'VDR-FF-02', building: 'Vaidurya',  floor: 'First Floor',  displayNum: 4 },
-      { id: 'APR-GF-01', building: 'Aparanji',  floor: 'Ground Floor', displayNum: 1 },
-      { id: 'APR-GF-02', building: 'Aparanji',  floor: 'Ground Floor', displayNum: 2 },
-      { id: 'APR-FF-01', building: 'Aparanji',  floor: 'First Floor',  displayNum: 3 },
-      { id: 'APR-FF-02', building: 'Aparanji',  floor: 'First Floor',  displayNum: 4 },
-      { id: 'APR-SF-01', building: 'Aparanji',  floor: 'Second Floor', displayNum: 5 },
-      { id: 'APR-SF-02', building: 'Aparanji',  floor: 'Second Floor', displayNum: 6 },
-    ];
+    // BUILDINGS, HOUSES, FLOOR_LABELS are already declared globally by app.js — reused as-is here
 
     async function initQrPrintPage() {
       const page = document.getElementById('qrp-page');
@@ -241,7 +214,7 @@
             <div class="qrp-building">${h.building}</div>
             <div class="qrp-img-wrap" id="qrp-img-${h.id}"></div>
             <div class="qrp-floor">${h.building} ${h.displayNum}</div>
-            <div class="qrp-id">${h.floor}</div>
+            <div class="qrp-id">${FLOOR_LABELS[h.floor] || h.floor}</div>
           `;
           grid.appendChild(card);
 
