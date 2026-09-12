@@ -232,6 +232,14 @@ function inr(amount) {
   return '₹' + n.toLocaleString('en-IN', opts);
 }
 
+// Escapes user-editable text (tenant names, descriptions, messages) before innerHTML insertion —
+// prevents a malicious/compromised operator's sheet entry from executing as script in other viewers' browsers
+function escapeHtml(str) {
+  return String(str ?? '').replace(/[&<>"']/g, ch => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+  }[ch]));
+}
+
 const _MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
 function formatDate(isoStr) {
@@ -271,7 +279,7 @@ function populateYearSelect(el) {
 function houseLabel(h) {
   const base   = `${h.building} ${h.displayNum}`;
   const tenant = HOUSE_CACHE[h.id]?.TenantName || '';
-  return tenant ? `${base} - ${tenant}` : base;
+  return tenant ? `${base} - ${escapeHtml(tenant)}` : base;
 }
 
 // houseId → full house row from Masters_Houses (loaded once on page init)
@@ -447,7 +455,7 @@ async function initCollectPage() {
       const tenant = cached?.TenantName || '';
       return `<button type="button" class="house-grid-btn${active ? '' : ' house-grid-btn--vacant'}" data-house="${h.id}" ${active ? '' : 'disabled'}>
         <span class="house-grid-num">${h.displayNum}</span>
-        <span class="house-grid-tenant">${active ? (tenant || '—') : t('misc.vacant_label')}</span>
+        <span class="house-grid-tenant">${active ? (escapeHtml(tenant) || '—') : t('misc.vacant_label')}</span>
       </button>`;
     }).join('');
     houseGridEl.querySelectorAll('.house-grid-btn:not(:disabled)').forEach(btn => {
@@ -529,9 +537,9 @@ async function initCollectPage() {
     const entry       = HOUSES.find(x => x.id === house.HouseID);
     const baseName    = entry ? `${entry.building} ${entry.displayNum}` : house.HouseLabel;
     const tenantName  = house.TenantName || '';
-    const displayLine = tenantName ? `${baseName} - ${tenantName}` : baseName;
+    const displayLine = tenantName ? `${baseName} - ${escapeHtml(tenantName)}` : baseName;
     houseInfoEl.innerHTML = `
-      <p class="house-building">${house.BuildingName}</p>
+      <p class="house-building">${escapeHtml(house.BuildingName)}</p>
       <p class="house-name">${displayLine}</p>
       <p class="house-rent"></p>
     `;
@@ -669,19 +677,17 @@ async function initDashboardPage() {
     // BLDG: prefix = building-level filter, handled client-side; don't send houseId to server
     if (filterHouse.value && !filterHouse.value.startsWith('BLDG:')) params.houseId = filterHouse.value;
     if (forceRefresh) params.forceRefresh = '1';
+    // balMonth: the balance summary's own required month, separate from the dashboard's
+    // optional month filter (blank in the "All Months" view)
+    params.balMonth = filterMonth.value || new Date().getMonth() + 1;
 
-    const balParams = { action: 'getBalanceSummary', year: filterYear.value, month: filterMonth.value || new Date().getMonth() + 1 };
-    if (forceRefresh) balParams.forceRefresh = '1';
-
-    // Fetch balance summary alongside dashboard data (parallel)
+    // Combined into a single Apps Script round-trip (getDashboardData) instead of two —
+    // each Apps Script Web App call costs its own redirect round-trip (~1-4s per HAR analysis)
     let balances = {};
     try {
-      const [dashRes, balRes] = await Promise.all([
-        apiGet(params, { forceRefresh }),
-        apiGet(balParams, { forceRefresh }),
-      ]);
+      const dashRes = await apiGet({ ...params, action: 'getDashboardData' }, { forceRefresh });
       if (dashRes.error) { resultsEl.innerHTML = `<p class="msg-error">${dashRes.error}</p>`; return; }
-      if (balRes.balances) balances = balRes.balances;
+      if (dashRes.balances) balances = dashRes.balances;
       render(dashRes.records, balances);
     } catch {
       resultsEl.innerHTML = `<p class="msg-error">${t('msg.net_check')}</p>`;
@@ -766,7 +772,7 @@ async function initDashboardPage() {
             grandTotal    += total;
             const monthLabel  = `${t('month.' + payments[0].RentForMonth)} ${payments[0].RentForYear}`;
             const tenant      = HOUSE_CACHE[h.id]?.TenantName || '';
-            const rowLabel    = tenant ? `${h.building} ${h.displayNum} - ${tenant}` : `${h.building} ${h.displayNum}`;
+            const rowLabel    = tenant ? `${h.building} ${h.displayNum} - ${escapeHtml(tenant)}` : `${h.building} ${h.displayNum}`;
             const bell        = payments.some(p => notifFailed(p.NotificationSent)) ? ` <span class="tip" data-tip="${t('tip.notif_failed')}">🔕</span>` : '';
             const incIcon     = incIcon0;
             const histBal     = bEntry.balance || 0;
@@ -794,7 +800,7 @@ async function initDashboardPage() {
               buildingTotal += p.AmountReceived;
               grandTotal    += p.AmountReceived;
               const tenant2   = HOUSE_CACHE[h.id]?.TenantName || '';
-              const rowLabel2 = tenant2 ? `${h.building} ${h.displayNum} - ${tenant2}` : `${h.building} ${h.displayNum}`;
+              const rowLabel2 = tenant2 ? `${h.building} ${h.displayNum} - ${escapeHtml(tenant2)}` : `${h.building} ${h.displayNum}`;
               const bell2     = notifFailed(p.NotificationSent) ? ` <span class="tip" data-tip="${t('tip.notif_failed')}">🔕</span>` : '';
               const incIcon2  = incIcon0;
               const histBal2  = bEntry.balance || 0;
@@ -1032,14 +1038,12 @@ async function initReportPage() {
     contentEl.innerHTML = '';
     showLoader();
     try {
-      const [dashRes, balRes] = await Promise.all([
-        apiGet({ action: 'getDashboard', year, month }),
-        apiGet({ action: 'getBalanceSummary', year, month }),
-      ]);
+      // Combined into a single Apps Script round-trip instead of two (getDashboard + getBalanceSummary)
+      const dashRes = await apiGet({ action: 'getDashboardData', year, month, balMonth: month });
 
       if (dashRes.error) { contentEl.innerHTML = `<p class="msg-error">${dashRes.error}</p>`; return; }
 
-      const balances = balRes.balances || {};
+      const balances = dashRes.balances || {};
       const byHouse  = {};
       (dashRes.records || []).forEach(r => (byHouse[r.HouseID] = byHouse[r.HouseID] || []).push(r));
 
@@ -1208,7 +1212,7 @@ function renderLedger(data, contentEl) {
   const tenantName = house.TenantName || '';
   const houseEntry = HOUSES.find(h => h.id === house.HouseID);
   const displayName = houseEntry
-    ? `${houseEntry.building} ${houseEntry.displayNum}${tenantName ? ' · ' + tenantName : ''}`
+    ? `${houseEntry.building} ${houseEntry.displayNum}${tenantName ? ' · ' + escapeHtml(tenantName) : ''}`
     : (house.HouseLabel || house.HouseID);
   const since = house.OccupancyDate ? _fmtDateOnly(house.OccupancyDate) : '';
 
@@ -1228,7 +1232,7 @@ function renderLedger(data, contentEl) {
       ? `<span class="ledger-bal-owed">${inr(r.runningBalance)}</span>`
       : `<span class="ledger-nil">—</span>`;
     const chargesLine = (r.charges && r.charges.length)
-      ? `<span class="ledger-charges">${r.charges.map(c => `+ ${inr(c.amount)} · ${c.description}`).join('<br>')}</span>`
+      ? `<span class="ledger-charges">${r.charges.map(c => `+ ${inr(c.amount)} · ${escapeHtml(c.description)}`).join('<br>')}</span>`
       : '';
     return `<tr class="${statusCls}">
       <td class="ledger-month-cell">${t('month.' + r.month)}<br><span class="ledger-year">${r.year}</span>${chargesLine}</td>
@@ -1252,8 +1256,8 @@ function renderLedger(data, contentEl) {
 
   contentEl.innerHTML = `
     <div class="ledger-header-card house-card">
-      <p class="house-building">${house.BuildingName || ''}</p>
-      <p class="house-name">${displayName}</p>
+      <p class="house-building">${escapeHtml(house.BuildingName) || ''}</p>
+      <p class="house-name">${escapeHtml(displayName)}</p>
       ${since ? `<p class="house-rent">${t('ledger.since')} ${since}</p>` : ''}
     </div>
 
@@ -1395,7 +1399,7 @@ async function initMessengerPage() {
         <span class="msg-log-action">${actionLabel}</span>
         <span class="msg-log-status msg-log-status--${String(row.status).toLowerCase()}">${row.status}</span>
       </div>
-      <div class="msg-log-details">${row.details}</div>
+      <div class="msg-log-details">${escapeHtml(row.details)}</div>
       <div class="msg-log-time">${formatDate(row.timestamp)}</div>
     </div>`;
   }
@@ -1539,7 +1543,7 @@ async function initMiscChargesPage() {
         <span class="msg-log-action">${houseName}</span>
         <span class="msg-log-status msg-log-status--${String(row.status).toLowerCase()}">${row.status}</span>
       </div>
-      <div class="msg-log-details">${row.description} · ${inr(row.amount)} · ${t('month.' + row.forMonth)} ${row.forYear}</div>
+      <div class="msg-log-details">${escapeHtml(row.description)} · ${inr(row.amount)} · ${t('month.' + row.forMonth)} ${row.forYear}</div>
       <div class="msg-log-time">${formatDate(row.createdAt)}</div>
     </div>`;
   }
@@ -1607,7 +1611,7 @@ function renderDoorLedger(data, contentEl) {
       ? r.payments.map(p => `<span>${inr(p.amount)}</span>${p.date ? `<span class="ledger-pay-date">${_fmtDateOnly(p.date)}</span>` : ''}`).join('')
       : `<span class="ledger-nil">—</span>`;
     const chargesLine = (r.charges && r.charges.length)
-      ? `<span class="ledger-charges">${r.charges.map(c => `+ ${inr(c.amount)} · ${c.description}`).join('<br>')}</span>`
+      ? `<span class="ledger-charges">${r.charges.map(c => `+ ${inr(c.amount)} · ${escapeHtml(c.description)}`).join('<br>')}</span>`
       : '';
     return `<tr class="${statusCls}">
       <td class="ledger-month-cell">${t('month.' + r.month)}<br><span class="ledger-year">${r.year}</span>${chargesLine}</td>
@@ -1618,8 +1622,8 @@ function renderDoorLedger(data, contentEl) {
 
   contentEl.innerHTML = `
     <div class="ledger-header-card house-card">
-      <p class="house-building">${house.BuildingName || ''}</p>
-      <p class="house-name">${displayName}${house.TenantName ? ' · ' + house.TenantName : ''}</p>
+      <p class="house-building">${escapeHtml(house.BuildingName) || ''}</p>
+      <p class="house-name">${escapeHtml(displayName)}${house.TenantName ? ' · ' + escapeHtml(house.TenantName) : ''}</p>
       ${since ? `<p class="house-rent">${t('ledger.since')} ${since}</p>` : ''}
     </div>
 

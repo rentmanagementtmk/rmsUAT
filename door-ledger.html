@@ -9,6 +9,10 @@
   <link rel="stylesheet" href="assets/css/style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Kannada:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Starts the DNS/TLS handshake to the Apps Script API in parallel with page load, instead of
+       only after app.js executes — this page is usually opened fresh (QR scan, no warm connection) -->
+  <link rel="preconnect" href="https://script.google.com">
+  <link rel="preconnect" href="https://script.googleusercontent.com">
 </head>
 <body data-page="door-ledger">
 
