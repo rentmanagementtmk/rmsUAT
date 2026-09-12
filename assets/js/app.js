@@ -1409,6 +1409,9 @@ async function initMessengerPage() {
   async function loadLogs(reset, houseIdFilter) {
     if (houseIdFilter !== undefined) logHouseFilter = houseIdFilter;
     if (reset) { logOffset = 0; logListEl.innerHTML = ''; }
+    showMoreBtn.disabled = true;
+    const prevLabel = showMoreBtn.textContent;
+    showMoreBtn.textContent = t('msg.loading');
     try {
       const params = { action: 'getMessageLogs', offset: logOffset, limit: LOG_PAGE_SIZE };
       if (logHouseFilter) params.houseId = logHouseFilter;
@@ -1419,6 +1422,9 @@ async function initMessengerPage() {
       showMoreBtn.classList.toggle('hidden', !res.hasMore);
     } catch {
       showToast(t('msg.network_error'), 'error');
+    } finally {
+      showMoreBtn.disabled = false;
+      showMoreBtn.textContent = prevLabel;
     }
   }
 
@@ -1553,6 +1559,9 @@ async function initMiscChargesPage() {
 
   async function loadLogs(reset) {
     if (reset) { logOffset = 0; logListEl.innerHTML = ''; }
+    showMoreBtn.disabled = true;
+    const prevLabel = showMoreBtn.textContent;
+    showMoreBtn.textContent = t('msg.loading');
     try {
       const res = await apiGet({ action: 'getMiscCharges', offset: logOffset, limit: LOG_PAGE_SIZE });
       if (res.error) return;
@@ -1561,6 +1570,9 @@ async function initMiscChargesPage() {
       showMoreBtn.classList.toggle('hidden', !res.hasMore);
     } catch {
       showToast(t('msg.network_error'), 'error');
+    } finally {
+      showMoreBtn.disabled = false;
+      showMoreBtn.textContent = prevLabel;
     }
   }
 
