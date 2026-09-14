@@ -56,7 +56,23 @@ export function CollectPage() {
   }, []);
 
   async function selectHouse(houseId: string) {
-    setLoading(true);
+    // Render the form immediately using data we already have client-side (from useHouseCache),
+    // instead of blocking behind a full-screen spinner until getHouseWithPreview responds — the
+    // form already renders "—" placeholders gracefully while preview is null (see below).
+    const entry = HOUSES.find((h) => h.id === houseId);
+    if (entry) {
+      setCurrentHouse({
+        HouseID: houseId,
+        BuildingName: entry.building,
+        HouseLabel: `${entry.building} ${entry.displayNum}`,
+        TenantName: houseCache[houseId]?.TenantName,
+      });
+      setPreview(null);
+      setAmount('');
+      setPaymentMode('ONLINE');
+    }
+
+    setLoading(!entry); // only block with the full spinner if we had nothing to show optimistically
     try {
       const res = await apiGet<{ error?: string; house?: HouseWithPreview; preview?: Preview }>({
         action: 'getHouseWithPreview',
@@ -64,14 +80,13 @@ export function CollectPage() {
         year,
         month,
       });
-      if (res.error === 'VACANT') { showToast(t('msg.house_vacant'), 'warning'); return; }
-      if (res.error || !res.house) { showToast(t('msg.house_not_found'), 'error'); return; }
+      if (res.error === 'VACANT') { showToast(t('msg.house_vacant'), 'warning'); setCurrentHouse(null); return; }
+      if (res.error || !res.house) { showToast(t('msg.house_not_found'), 'error'); setCurrentHouse(null); return; }
       setCurrentHouse(res.house);
       setPreview(res.preview ?? null);
-      setAmount('');
-      setPaymentMode('ONLINE');
     } catch {
       showToast(t('msg.network_error'), 'error');
+      setCurrentHouse(null);
     } finally {
       setLoading(false);
     }
@@ -131,6 +146,14 @@ export function CollectPage() {
     if (!currentHouse) return;
     const amt = parseFloat(amount);
     if (isNaN(amt) || amt <= 0) { showToast(t('msg.invalid_amount'), 'error'); return; }
+
+    // Skip the dup-check network round-trip entirely when the house preview we already fetched
+    // shows nothing paid for this month yet — a duplicate is only possible if paidForMonth > 0,
+    // so most saves (first payment of the month) go straight to saveRent with one less hop.
+    if (!preview || preview.paidForMonth === 0) {
+      await doSave();
+      return;
+    }
 
     // Pre-check: warn if a record already exists for this house/month/year
     try {
