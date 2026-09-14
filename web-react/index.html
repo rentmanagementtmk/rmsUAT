@@ -9,6 +9,10 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Kannada:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <!-- Starts the DNS/TLS handshake to the backend API in parallel with page load, instead of
+         only after app.js's first fetch — shaves the connection-setup cost off the first call -->
+    <link rel="preconnect" href="https://ebghhlxyxrkegawnhljq.supabase.co" />
+    <link rel="preconnect" href="https://script.google.com" />
     <title>RMS</title>
   </head>
   <body>

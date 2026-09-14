@@ -35,7 +35,7 @@ const monthKey = (m: number) => `month.${m}`;
 export function CollectPage() {
   const { t } = useLang();
   const { showToast } = useToast();
-  const { houseCache, isHouseActive, refresh: refreshHouses } = useHouseCache();
+  const { houseCache, isHouseActive } = useHouseCache();
 
   const initial = prevMonth();
   const [year, setYear] = useState(initial.year);
@@ -302,7 +302,7 @@ export function CollectPage() {
               <button className="btn btn-secondary" onClick={() => setDupRecords(null)}>{t('collect.cancel')}</button>
               <button
                 className="btn btn-primary"
-                onClick={async () => { setDupRecords(null); await doSave(); refreshHouses(); }}
+                onClick={async () => { setDupRecords(null); await doSave(); }}
               >
                 {t('modal.save_anyway')}
               </button>
