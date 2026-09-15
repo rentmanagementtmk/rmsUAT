@@ -1102,6 +1102,21 @@ textarea { resize: vertical; font-family: inherit; }
   backdrop-filter: blur(2px);
 }
 
+/* ─── ERROR FALLBACK ────────────────────────────────────────────────────── */
+.error-fallback {
+  position: fixed;
+  inset: 0;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  align-items: center;
+  justify-content: center;
+  z-index: 500;
+  padding: 1.5rem;
+  text-align: center;
+}
+
 /* ─── DUPLICATE MODAL TABLE ────────────────────────────────────────────── */
 .dup-table {
   width: 100%;

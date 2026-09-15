@@ -7,6 +7,7 @@ import { apiGet, apiPost } from '../lib/api';
 import { useHouseCache } from '../lib/useHouseCache';
 import { BUILDINGS, HOUSES } from '../lib/houses';
 import { inr, prevMonth, fmtDateOnly } from '../lib/format';
+import { getCachedPreview, setCachedPreview, previewCacheKey } from '../lib/previewCache';
 
 interface HouseWithPreview {
   HouseID: string;
@@ -67,7 +68,9 @@ export function CollectPage() {
         HouseLabel: `${entry.building} ${entry.displayNum}`,
         TenantName: houseCache[houseId]?.TenantName,
       });
-      setPreview(null);
+      // Show the last-known Current Due / After Payment instantly from cache while the real
+      // numbers load — replaced the moment the fresh response arrives below.
+      setPreview(getCachedPreview(previewCacheKey(houseId, year, month)));
       setAmount('');
       setPaymentMode('ONLINE');
     }
@@ -84,6 +87,7 @@ export function CollectPage() {
       if (res.error || !res.house) { showToast(t('msg.house_not_found'), 'error'); setCurrentHouse(null); return; }
       setCurrentHouse(res.house);
       setPreview(res.preview ?? null);
+      if (res.preview) setCachedPreview(previewCacheKey(houseId, year, month), res.preview);
     } catch {
       showToast(t('msg.network_error'), 'error');
       setCurrentHouse(null);

@@ -4,6 +4,7 @@ import { useLang } from '../lib/LangContext';
 import { useToast } from '../lib/ToastContext';
 import { apiPost } from '../lib/api';
 import { setAuthSession } from '../lib/auth';
+import { prefetchHouses } from '../lib/useHouseCache';
 import { PageLoader } from '../components/PageLoader';
 
 const LAST_PHONE_KEY = 'rms_last_phone';
@@ -60,6 +61,7 @@ export function LoginPage() {
       });
       if (res.error) { showToast(res.error, 'error'); return; }
       setAuthSession(res.token, { name: res.name, role: res.role }, remember);
+      prefetchHouses(); // warm the tenant-name cache before the Collect page mounts
       const redirect = searchParams.get('redirect') || '/';
       navigate(redirect);
     } catch {
