@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useLang } from '../lib/LangContext';
 import { useToast } from '../lib/ToastContext';
 import { Layout } from '../components/Layout';
@@ -51,12 +51,19 @@ export function CollectPage() {
   const [saving, setSaving] = useState(false);
   const [dupRecords, setDupRecords] = useState<DupRecord[] | null>(null);
 
+  // Bumped on every selectHouse/resetToScan call so an in-flight fetch from a house the user
+  // already left (via Back, or by tapping a different house) can detect it's stale and no-op
+  // instead of clobbering the currently-shown house/preview a moment later.
+  const requestSeq = useRef(0);
+
   const yearOptions = useMemo(() => {
     const y = new Date().getFullYear();
     return [y - 1, y, y + 1];
   }, []);
 
   async function selectHouse(houseId: string) {
+    const seq = ++requestSeq.current;
+
     // Render the form immediately using data we already have client-side (from useHouseCache),
     // instead of blocking behind a full-screen spinner until getHouseWithPreview responds — the
     // form already renders "—" placeholders gracefully while preview is null (see below).
@@ -83,20 +90,23 @@ export function CollectPage() {
         year,
         month,
       });
+      if (seq !== requestSeq.current) return; // user already moved on — discard this stale response
       if (res.error === 'VACANT') { showToast(t('msg.house_vacant'), 'warning'); setCurrentHouse(null); return; }
       if (res.error || !res.house) { showToast(t('msg.house_not_found'), 'error'); setCurrentHouse(null); return; }
       setCurrentHouse(res.house);
       setPreview(res.preview ?? null);
       if (res.preview) setCachedPreview(previewCacheKey(houseId, year, month), res.preview);
     } catch {
+      if (seq !== requestSeq.current) return;
       showToast(t('msg.network_error'), 'error');
       setCurrentHouse(null);
     } finally {
-      setLoading(false);
+      if (seq === requestSeq.current) setLoading(false);
     }
   }
 
   function resetToScan() {
+    requestSeq.current++; // invalidate any selectHouse fetch still in flight
     setCurrentHouse(null);
     setPreview(null);
     setAmount('');
