@@ -14,7 +14,9 @@ import { MiscChargesPage } from './pages/MiscChargesPage';
 import { QrPrintPage } from './pages/QrPrintPage';
 import { DoorLedgerPage } from './pages/DoorLedgerPage';
 import { prefetchHouses } from './lib/useHouseCache';
-import { isLoggedIn } from './lib/auth';
+import { isLoggedIn, getAuthToken } from './lib/auth';
+import { debugLog } from './lib/debugLog';
+import { DebugBanner } from './components/DebugBanner';
 
 /** Mobile tap-to-show tooltip: toggles .show-tip on .tip elements, dismissed by tapping elsewhere — mirrors app.js */
 function useGlobalTipHandler() {
@@ -35,6 +37,7 @@ function useGlobalTipHandler() {
 function useBfcacheReload() {
   useEffect(() => {
     function handler(e: PageTransitionEvent) {
+      debugLog('pageshow', { persisted: e.persisted });
       if (e.persisted) window.location.reload();
     }
     window.addEventListener('pageshow', handler);
@@ -42,12 +45,39 @@ function useBfcacheReload() {
   }, []);
 }
 
+/** Diagnostic-only: records app lifecycle events + polls for the auth token disappearing, so we
+ * can see exactly when/why a session was lost on a real device (view via DebugBanner, ?debug=1). */
+function useSessionDebugLog() {
+  useEffect(() => {
+    debugLog('app-mount', { visibility: document.visibilityState, hadToken: !!getAuthToken() });
+
+    function onVisibility() {
+      debugLog('visibilitychange', { state: document.visibilityState, hadToken: !!getAuthToken() });
+    }
+    document.addEventListener('visibilitychange', onVisibility);
+
+    let lastHadToken = !!getAuthToken();
+    const heartbeat = setInterval(() => {
+      const hasToken = !!getAuthToken();
+      if (lastHadToken && !hasToken) debugLog('token-lost', { visibility: document.visibilityState });
+      lastHadToken = hasToken;
+    }, 5000);
+
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility);
+      clearInterval(heartbeat);
+    };
+  }, []);
+}
+
 function App() {
   useGlobalTipHandler();
   useBfcacheReload();
+  useSessionDebugLog();
   // Warm the house cache as early as possible (page refresh/app resume) so the Collect page's
   // tenant names are already available by the time the user navigates there, not just on login.
   useEffect(() => { if (isLoggedIn()) prefetchHouses(); }, []);
+  const showDebugBanner = new URLSearchParams(window.location.search).get('debug') === '1';
   return (
     <LangProvider>
       <ToastProvider>
@@ -67,6 +97,7 @@ function App() {
           </ErrorBoundary>
         </BrowserRouter>
       </ToastProvider>
+      {showDebugBanner && <DebugBanner />}
     </LangProvider>
   );
 }

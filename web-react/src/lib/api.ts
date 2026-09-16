@@ -3,6 +3,7 @@
 // component/page must go through this module, never construct requests directly.
 import { CONFIG } from './config';
 import { clearAuth, getAuthToken } from './auth';
+import { debugLog } from './debugLog';
 
 export class UnauthorizedError extends Error {
   constructor() {
@@ -62,6 +63,7 @@ export async function apiGet<T = any>(params: Params, opts: { forceRefresh?: boo
   if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
   const data = await resp.json();
   if (data.error === 'UNAUTHORIZED') {
+    debugLog('server-unauthorized', { action: params.action });
     clearAuth();
     throw new UnauthorizedError();
   }
@@ -82,6 +84,7 @@ export async function apiPost<T = any>(body: Record<string, unknown>): Promise<T
   if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
   const data = await resp.json();
   if (data.error === 'UNAUTHORIZED') {
+    debugLog('server-unauthorized', { action });
     clearAuth();
     throw new UnauthorizedError();
   }
