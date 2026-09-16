@@ -26,9 +26,11 @@ export function DebugBanner() {
         token: {hasToken ? 'present' : 'MISSING'} — {new Date().toLocaleTimeString()}
         <button onClick={clearDebugLog} style={{ marginLeft: 8 }}>clear log</button>
       </div>
-      {[...log].reverse().map((e, i) => (
-        <div key={i}>{e.t.slice(11, 19)} — {e.event}{e.extra ? ` (${JSON.stringify(e.extra)})` : ''}</div>
-      ))}
+      {[...log].reverse().map((e, i) => {
+        const { t, event, ...extra } = e;
+        const extraStr = Object.keys(extra).length ? ` (${JSON.stringify(extra)})` : '';
+        return <div key={i}>{t.slice(11, 19)} — {event}{extraStr}</div>;
+      })}
     </div>
   );
 }
