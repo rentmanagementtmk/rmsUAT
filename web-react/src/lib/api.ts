@@ -59,34 +59,46 @@ function buildUrl(params: Params, forceRefresh: boolean): string {
 }
 
 export async function apiGet<T = any>(params: Params, opts: { forceRefresh?: boolean } = {}): Promise<T> {
+  const tokenTail = getAuthToken().slice(-6);
+  debugLog('api-request', { action: params.action, tokenTail });
   const resp = await fetch(buildUrl(params, !!opts.forceRefresh), opts.forceRefresh ? { cache: 'reload' } : {});
-  if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+  if (!resp.ok) {
+    debugLog('api-http-error', { action: params.action, tokenTail, status: resp.status });
+    throw new Error(`HTTP ${resp.status}`);
+  }
   const data = await resp.json();
   if (data.error === 'UNAUTHORIZED') {
-    debugLog('server-unauthorized', { action: params.action });
+    debugLog('server-unauthorized', { action: params.action, tokenTail });
     clearAuth();
     throw new UnauthorizedError();
   }
+  debugLog('api-ok', { action: params.action, tokenTail });
   return data as T;
 }
 
 export async function apiPost<T = any>(body: Record<string, unknown>): Promise<T> {
   const action = String(body.action);
+  const tokenTail = getAuthToken().slice(-6);
   const url = usingSupabase()
     ? `${CONFIG.SUPABASE_FUNCTIONS_URL}/${ACTION_TO_FUNCTION[action] || action}`
     : CONFIG.API_URL;
   const postBody = usingSupabase() ? { ...body, action: undefined, token: getAuthToken() } : { ...body, token: getAuthToken() };
+  debugLog('api-request', { action, tokenTail });
   const resp = await fetch(url, {
     method: 'POST',
     // Omitting Content-Type keeps this a CORS "simple request" — no preflight needed
     body: JSON.stringify(postBody),
   });
-  if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+  if (!resp.ok) {
+    debugLog('api-http-error', { action, tokenTail, status: resp.status });
+    throw new Error(`HTTP ${resp.status}`);
+  }
   const data = await resp.json();
   if (data.error === 'UNAUTHORIZED') {
-    debugLog('server-unauthorized', { action });
+    debugLog('server-unauthorized', { action, tokenTail });
     clearAuth();
     throw new UnauthorizedError();
   }
+  debugLog('api-ok', { action, tokenTail });
   return data as T;
 }

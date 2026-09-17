@@ -2,7 +2,7 @@
 // localStorage under a separate key so it survives clearAuth() and reloads, letting us see the
 // exact sequence of events (mount/visibility/bfcache-restore/token-lost) after the fact.
 const KEY = 'rms_debug_log';
-const MAX_ENTRIES = 200;
+const MAX_ENTRIES = 400; // raised since every API call now logs a request+response pair
 
 export interface DebugEntry {
   t: string; // ISO timestamp

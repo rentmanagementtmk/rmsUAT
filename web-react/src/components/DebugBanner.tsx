@@ -29,7 +29,7 @@ export function DebugBanner() {
       {[...log].reverse().map((e, i) => {
         const { t, event, ...extra } = e;
         const extraStr = Object.keys(extra).length ? ` (${JSON.stringify(extra)})` : '';
-        return <div key={i}>{t.slice(11, 19)} — {event}{extraStr}</div>;
+        return <div key={i}>{t.slice(11, 23)} — {event}{extraStr}</div>;
       })}
     </div>
   );
